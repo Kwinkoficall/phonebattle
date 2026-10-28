@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="ru"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>PHONEBATTLE</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+:root{--bg:#090a14;--p1:#12142a;--p2:#1a1d3a;--p3:#242850;--tx:#eef0ff;--mu:#8a90b8;--ac:#00d9ff;--ac2:#7b5cff;--gold:#ffc23a;--ok:#3ddc84;--bad:#ff4d5e;--top:0px}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--tx);font-family:Inter,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;overflow:hidden;-webkit-user-select:none;user-select:none}
+body{background:radial-gradient(900px 500px at 50% -10%,#1d2a6a55,transparent 70%),radial-gradient(700px 500px at 100% 100%,#5a1f8a40,transparent 70%),var(--bg)}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
+#app{position:absolute;inset:0;display:flex;flex-direction:column;max-width:1100px;margin:0 auto}
+#hd{flex:none;display:flex;align-items:center;gap:10px;padding:calc(10px + var(--top)) 14px 8px}
+#logo{font-weight:900;letter-spacing:.5px;font-size:19px;background:linear-gradient(90deg,var(--ac),var(--ac2));-webkit-background-clip:text;background-clip:text;color:transparent;white-space:nowrap}
+#hd .sp{flex:1}
+.chip{display:flex;align-items:center;gap:6px;padding:7px 12px;border-radius:999px;background:var(--p2);border:1px solid #ffffff14;font-weight:800;font-size:14px;white-space:nowrap}
+.chip.coin{color:var(--gold)}
+.chip.lv{color:var(--ac);font-size:12px}
+#snd{width:36px;height:36px;border-radius:50%;background:var(--p2);border:1px solid #ffffff14;font-size:16px}
+#main{flex:1;min-height:0;position:relative}
+.scr{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;padding:6px 14px 110px;display:none;-webkit-overflow-scrolling:touch}
+.scr.on{display:block}
+h2{margin:6px 2px 10px;font-size:20px}
+.sub{color:var(--mu);font-size:13px;margin:0 2px 12px;line-height:1.4}
+#nav{position:absolute;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));height:64px;border-radius:24px;display:flex;justify-content:space-around;align-items:center;background:#12142ad9;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid #ffffff1a;box-shadow:0 10px 30px #0008;z-index:20;max-width:640px;margin:0 auto}
+#nav button{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10.5px;font-weight:700;color:var(--mu);padding:6px 0;position:relative}
+#nav button span{font-size:21px;line-height:1}
+#nav button.on{color:#fff}
+#nav button.on span{filter:drop-shadow(0 0 8px var(--ac))}
+#nav i{position:absolute;top:2px;right:22%;width:9px;height:9px;border-radius:50%;background:var(--bad);display:none}
+#nav i.on{display:block}
+.cases{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.case{border-radius:20px;padding:12px 10px 12px;background:linear-gradient(160deg,var(--p3),var(--p1));border:1px solid #ffffff17;text-align:center;position:relative;overflow:hidden;transition:transform .15s}
+.case:active{transform:scale(.97)}
+.case>svg{width:100%;height:120px;display:block}
+.case>.cimg{width:100%;height:120px;object-fit:contain;display:block}
+.case b{display:block;font-size:15px;margin-top:4px}
+.case small{display:block;color:var(--mu);font-size:11.5px;margin:2px 0 8px;min-height:15px}
+.price{display:inline-flex;gap:5px;align-items:center;padding:7px 14px;border-radius:999px;background:linear-gradient(90deg,var(--ac),var(--ac2));font-weight:900;font-size:14px;color:#04101c}
+.price.free{background:linear-gradient(90deg,var(--ok),#9dff6a)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:13px 12px;border-radius:16px;font-weight:900;font-size:14.5px;white-space:nowrap;background:linear-gradient(90deg,var(--ac),var(--ac2));color:#04101c;border:0}
+.btn.g{background:var(--p3);color:var(--tx);border:1px solid #ffffff1a}
+.btn.red{background:linear-gradient(90deg,#ff4d5e,#ff8a4d);color:#fff}
+.btn.gold{background:linear-gradient(90deg,#ffc23a,#ff9a3a);color:#2a1600}
+.btn:disabled,.btn.dis{opacity:.45;pointer-events:none}
+.btn.w{width:100%}
+.row{display:flex;gap:10px}
+.row>*{flex:1}
+.panel{background:linear-gradient(160deg,var(--p2),var(--p1));border:1px solid #ffffff14;border-radius:20px;padding:14px;margin-bottom:12px}
+.hero{display:flex;gap:12px;align-items:center}
+.hero .t{flex:1}
+.hero b{font-size:17px}
+.bar{height:8px;border-radius:99px;background:#ffffff14;overflow:hidden;margin-top:6px}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--ac),var(--ac2));border-radius:99px}
+.back{display:inline-flex;align-items:center;gap:6px;color:var(--mu);font-weight:700;margin:2px 0 8px;padding:6px 4px}
+/* рулетка */
+#rl{position:relative;height:178px;border-radius:20px;overflow:hidden;background:linear-gradient(180deg,#0d0f22,#151833);border:1px solid #ffffff17;margin-bottom:12px}
+#rl:before,#rl:after{content:"";position:absolute;top:0;bottom:0;width:60px;z-index:3;pointer-events:none}
+#rl:before{left:0;background:linear-gradient(90deg,#0d0f22,transparent)}
+#rl:after{right:0;background:linear-gradient(270deg,#0d0f22,transparent)}
+#mk{position:absolute;left:50%;top:0;bottom:0;width:3px;margin-left:-1.5px;background:var(--gold);z-index:4;box-shadow:0 0 14px var(--gold)}
+#mk:before{content:"";position:absolute;top:-1px;left:-7px;border:8.5px solid transparent;border-top-color:var(--gold)}
+#strip{position:absolute;left:0;top:10px;display:flex;gap:8px;will-change:transform}
+.ri{flex:none;width:118px;height:158px;border-radius:14px;background:linear-gradient(180deg,#1c2044,#12152e);border:1px solid #ffffff12;border-bottom:4px solid var(--rc,#888);text-align:center;padding:6px 4px;font-size:11px;line-height:1.2;overflow:hidden}
+.ri svg{height:104px;width:auto;display:block;margin:0 auto 4px}
+.ri span{display:block;color:#c9cdef;font-weight:600}
+/* карточки */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:9px}
+.pc{position:relative;border-radius:16px;background:linear-gradient(180deg,var(--p3),var(--p1));border:1px solid #ffffff14;border-bottom:4px solid var(--rc,#888);padding:7px 5px 7px;text-align:center;overflow:hidden}
+.pc svg{height:96px;width:auto;display:block;margin:0 auto 4px}
+.pc .nm{font-size:11.5px;font-weight:800;line-height:1.15;min-height:27px;display:flex;align-items:center;justify-content:center}
+.pc .vl{font-size:11px;color:var(--gold);font-weight:800;margin-top:2px}
+.pc .cd{font-size:9.5px;color:var(--mu);margin-top:1px}
+.pc.sh{box-shadow:0 0 0 1px #fff3,0 0 18px var(--rc);animation:shine 2.4s infinite}
+.pc.sh:after{content:"★";position:absolute;top:4px;right:7px;color:#fff;font-size:11px;text-shadow:0 0 6px var(--rc)}
+.pc.lock svg{filter:grayscale(1) brightness(.35)}
+.pc.lock .nm,.pc.lock .vl{opacity:.5}
+.pc.sel{outline:2px solid var(--ac);outline-offset:-2px}
+.pc .qty{position:absolute;top:5px;left:6px;background:#000a;border-radius:8px;padding:1px 6px;font-size:10px;font-weight:800}
+@keyframes shine{50%{box-shadow:0 0 0 1px #fff5,0 0 28px var(--rc)}}
+.chips{display:flex;gap:6px;overflow-x:auto;padding:2px 0 10px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.fc{flex:none;padding:7px 12px;border-radius:999px;background:var(--p2);border:1px solid #ffffff12;font-size:12.5px;font-weight:700;color:var(--mu)}
+.fc.on{background:linear-gradient(90deg,var(--ac),var(--ac2));color:#04101c;border-color:transparent}
+select{background:var(--p2);color:var(--tx);border:1px solid #ffffff1a;border-radius:12px;padding:9px 10px;font:inherit;font-size:13px;font-weight:700}
+/* модалка */
+#md{position:absolute;inset:0;background:#05060dcc;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:none;align-items:flex-end;justify-content:center;z-index:50}
+#md.on{display:flex}
+#mdb{width:100%;max-width:520px;max-height:92%;overflow-y:auto;background:linear-gradient(180deg,var(--p2),var(--p1));border-radius:26px 26px 0 0;border:1px solid #ffffff1a;padding:18px 16px calc(18px + env(safe-area-inset-bottom));animation:up .25s ease-out}
+@keyframes up{from{transform:translateY(40px);opacity:0}}
+.big{text-align:center}
+.big svg{height:230px;width:auto;margin:6px auto 4px;display:block;filter:drop-shadow(0 12px 22px var(--rc))}
+.big .rn{display:inline-block;padding:4px 12px;border-radius:99px;font-size:12px;font-weight:900;color:#06101c;background:var(--rc)}
+.big h3{margin:8px 0 2px;font-size:22px}
+.big .meta{color:var(--mu);font-size:13px}
+.big .val{font-size:26px;font-weight:900;color:var(--gold);margin:6px 0 10px}
+.spec{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:10px 0 14px;text-align:left}
+.spec div{background:#ffffff0c;border-radius:12px;padding:8px 10px;font-size:12px;color:var(--mu)}
+.spec b{display:block;color:var(--tx);font-size:13.5px;margin-top:1px}
+.glow{animation:pop .5s cubic-bezier(.2,1.4,.4,1)}
+@keyframes pop{from{transform:scale(.6);opacity:0}}
+#toast{position:absolute;left:50%;top:calc(64px + var(--top));transform:translateX(-50%) translateY(-20px);background:#1d2150;border:1px solid #ffffff26;border-radius:14px;padding:10px 16px;font-weight:800;font-size:13.5px;opacity:0;pointer-events:none;transition:.25s;z-index:80;max-width:90%;text-align:center}
+#toast.on{opacity:1;transform:translateX(-50%)}
+.odds{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:12px}
+.odds span{flex:1;min-width:70px;border-radius:10px;padding:6px 6px;text-align:center;font-size:11px;font-weight:800;background:#ffffff0a;border-bottom:3px solid var(--rc)}
+.odds span b{display:block;font-size:13px;color:#fff}
+.li{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #ffffff10}
+.li:last-child{border:0}
+.li .ic{font-size:24px;width:34px;text-align:center}
+.li .tx{flex:1;font-size:13.5px;font-weight:700}
+.li .tx small{display:block;color:var(--mu);font-weight:500;font-size:11.5px;margin-top:2px}
+.vs{display:grid;grid-template-columns:1fr 40px 1fr;gap:6px;align-items:center;margin:8px 0}
+.vs .x{text-align:center;font-weight:900;color:var(--gold);font-size:18px}
+.vs .pc svg{height:110px}
+.st{display:grid;grid-template-columns:1fr 96px 1fr;gap:8px;align-items:center;margin:6px 0;font-size:12px;color:var(--mu);text-align:center}
+.st .b{height:10px;border-radius:99px;background:#ffffff12;overflow:hidden;position:relative}
+.st .b i{position:absolute;top:0;bottom:0;border-radius:99px;transition:width .6s}
+.st .l i{right:0;background:linear-gradient(270deg,var(--ac),var(--ac2))}
+.st .r i{left:0;background:linear-gradient(90deg,#ff8a4d,var(--bad))}
+.st .win i{filter:brightness(1.5) drop-shadow(0 0 6px #fff)}
+.slots{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:8px 0 12px}
+.slot{aspect-ratio:3/4;border-radius:14px;border:2px dashed #ffffff26;background:#ffffff08;display:flex;align-items:center;justify-content:center;color:var(--mu);font-size:24px;overflow:hidden}
+.slot svg{height:88%;width:auto}
+.conf{position:fixed;inset:0;pointer-events:none;z-index:70;overflow:hidden}
+.conf i{position:absolute;top:-10px;width:8px;height:14px;border-radius:2px;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(110vh) rotate(720deg)}}
+.cat{margin-bottom:20px}.ch{display:flex;gap:10px;align-items:center;margin:6px 2px 10px}.ch span{font-size:28px}.ch b{font-size:18px}.ch small{display:block;color:var(--mu);font-size:12px;margin-top:1px}.crow{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+@media(min-width:760px){.crow{grid-template-columns:repeat(5,1fr)}}
+@media(min-width:760px){.cases{grid-template-columns:repeat(4,1fr)}.grid{grid-template-columns:repeat(auto-fill,minmax(128px,1fr))}.pc svg{height:118px}#mdb{border-radius:26px;margin-bottom:5vh}#md{align-items:center}}
+.pimg{height:96px;width:auto;max-width:100%;object-fit:contain;display:block;margin:0 auto 4px;background:#f2f3f7;border-radius:12px;padding:3px}.ri .pimg{height:104px}.big .pimg{height:230px;margin:6px auto 4px;filter:drop-shadow(0 12px 22px var(--rc))}.vs .pc .pimg{height:110px}.slot .pimg{height:88%}.pc.lock .pimg{filter:grayscale(1) brightness(.35)}
+</style></head><body>
+<div id="app">
+<div id="hd"><div id="logo">PHONEBATTLE</div><div class="sp"></div><div class="chip lv" id="lvc">Ур. 1</div><div class="chip coin" id="coins">0</div><button id="snd">🔊</button></div>
+<div id="main">
+<section class="scr on" id="s-home"></section>
+<section class="scr" id="s-case"></section>
+<section class="scr" id="s-col"></section>
+<section class="scr" id="s-bat"></section>
+<section class="scr" id="s-con"></section>
+<section class="scr" id="s-bon"></section>
+</div>
+<div id="nav"><button data-go="home" class="on"><span>📦</span>Кейсы</button><button data-go="col"><span>📱</span>Коллекция</button><button data-go="bat"><span>⚔️</span>Батл</button><button data-go="con"><span>🔁</span>Контракт</button><button data-go="bon"><span>🎁</span>Бонус<i id="bdot"></i></button></div>
+<div id="md"><div id="mdb"></div></div>
+<div id="toast"></div>
+</div>
+<script>
+// brand|name|year|launch_usd|collector_usd(0=нет)|group|style|c1|c2|ram|rom|mp|mah|inch
+const PH_RAW=`Samsung|Galaxy A05|2023|129|0|b1|ver|#20242c|#3d4558|4|64|50|5000|6.7
+Samsung|Galaxy A06|2024|149|0|b1|dual|#2a3a5a|#5a7ab0|4|64|50|5000|6.7
+Samsung|Galaxy A15|2024|199|0|b1|ver|#1f2a44|#3f5a9a|4|128|50|5000|6.5
+Samsung|Galaxy A16|2024|199|0|b1|ver|#3a4a3a|#7aa07a|4|128|50|5000|6.7
+Samsung|Galaxy M15|2024|199|0|b1|ver|#2a2a6a|#6a6ad0|4|128|50|6000|6.5
+Samsung|Galaxy A25|2024|299|0|b1|ver|#4a2a5a|#a06ad0|8|128|50|5000|6.5
+Nokia|G22|2023|150|0|b2|dual|#3b4f5a|#6e8a99|4|128|50|5050|6.5
+Nokia|G42|2023|230|0|b2|dual|#3a2f5a|#7a66c0|6|128|50|5000|6.56
+Motorola|Moto E14|2024|110|0|b2|dual|#2e5b8a|#5aa0d6|2|64|13|5000|6.5
+Motorola|Moto G34|2024|200|0|b2|dual|#1a4a3a|#3ab08a|8|128|50|5000|6.5
+Motorola|Moto G54|2023|250|0|b2|dual|#1a3a6a|#3a70c0|8|256|50|5000|6.5
+Motorola|Moto G84|2023|300|0|b2|dual|#6a2a6a|#d070d0|12|256|50|5000|6.5
+Xiaomi|Redmi A3|2024|100|0|b3|dual|#1f6f5c|#2fa88a|3|64|8|5000|6.7
+Xiaomi|Redmi 13C|2023|130|0|b3|dual|#2a3a2a|#5a8a5a|4|128|50|5000|6.7
+Xiaomi|Redmi 13|2024|160|0|b3|cir|#3a2a5a|#7a5ac0|6|128|108|5030|6.79
+Xiaomi|Redmi Note 12|2023|200|0|b3|cir|#2a4a6a|#5a9ad0|6|128|50|5000|6.67
+Xiaomi|Redmi Note 13|2024|230|0|b3|cir|#7a2a2a|#c85a5a|8|256|108|5000|6.67
+Xiaomi|Redmi Note 13 Pro|2024|300|0|b3|cir|#1a2a4a|#3a5a9a|8|256|200|5100|6.67
+Poco|C65|2023|120|0|b4|dual|#3a3a42|#6a6a78|6|128|50|5000|6.74
+Poco|M6 Pro|2024|220|0|b4|dual|#1d1d22|#44444f|8|256|64|5000|6.67
+Poco|X6|2024|280|0|b4|cir|#c8a82a|#f0d86a|8|256|64|5100|6.67
+Realme|C53|2023|110|0|b4|dual|#d9b45a|#f3dc8f|6|128|50|5000|6.7
+Realme|Note 50|2024|100|0|b4|dual|#2a5a3a|#5ab07a|4|128|13|5000|6.74
+Realme|12|2024|250|0|b4|cir|#2a5a3a|#5ab07a|8|256|50|5000|6.67
+Tecno|Spark 20|2024|130|0|b5|ver|#2a3a6e|#5a78d6|8|128|50|5000|6.6
+Tecno|Camon 30|2024|280|0|b5|cir|#3a1a5a|#9a5ad0|12|256|50|5000|6.7
+Infinix|Hot 40|2024|140|0|b5|cir|#1d2230|#3a4560|8|256|50|5000|6.8
+Infinix|Note 40|2024|230|0|b5|cir|#2a4a2a|#6ab06a|8|256|108|5000|6.78
+Honor|X5|2023|120|0|b5|dual|#202a38|#46607f|2|32|8|5000|6.5
+Honor|X7b|2024|200|0|b5|cir|#254a4a|#4d9a9a|8|256|108|6000|6.8
+Honor|X8b|2024|280|0|b5|cir|#4a2a2a|#c06a6a|8|256|108|4500|6.7
+ZTE|Blade A54|2024|100|0|b5|dual|#3a3a42|#6a6a78|4|64|13|5000|6.5
+itel|A70|2024|90|0|b5|dual|#2a2a2d|#58585f|4|128|13|5000|6.6
+Apple|iPhone 8|2017|699|0|s1|single|#a8adb8|#d9dde6|2|64|12|1821|4.7
+Apple|iPhone XR|2018|749|0|s1|single|#c0392b|#ff6a5a|3|64|12|2942|6.1
+Apple|iPhone 11|2019|699|0|s1|dual|#6a3a8a|#b07ad9|4|64|12|3110|6.1
+Apple|iPhone SE 2022|2022|429|0|s1|single|#2a2a4a|#6a6ab0|4|64|12|2018|4.7
+Apple|iPhone 16e|2025|599|0|s1|single|#e8e8ea|#ffffff|8|128|48|4005|6.1
+Google|Pixel 4a|2020|349|0|s2|single|#1a1a1d|#3a3a42|6|128|12|3140|5.8
+Google|Pixel 6a|2022|449|0|s2|bar|#4a6a4a|#9ac09a|6|128|12|4410|6.1
+Google|Pixel 7a|2023|499|0|s2|bar|#2a6ab0|#7ab8f0|8|128|64|4385|6.1
+Google|Pixel 8|2023|699|0|f3|bar|#2a2a2d|#58585f|8|128|50|4575|6.2
+Google|Pixel 8a|2024|499|0|s2|bar|#4a6a8a|#9ac0e8|8|128|64|4492|6.1
+Google|Pixel 9a|2025|499|0|s2|bar|#c8b0d0|#ecdcf2|8|128|48|5100|6.3
+Samsung|Galaxy A35|2024|399|0|s3|ver|#2a3a5a|#5a7ab0|8|128|50|5000|6.6
+Samsung|Galaxy A55|2024|439|0|s3|ver|#2a2a5a|#6a6ad0|8|256|50|5000|6.6
+Samsung|Galaxy A56|2025|499|0|s3|ver|#3a3a3a|#8a8a8a|8|256|50|5000|6.7
+Samsung|Galaxy S21 FE|2021|699|0|s3|ver|#4a2a6a|#9a6ad0|6|128|12|4500|6.4
+Samsung|Galaxy S23 FE|2023|599|0|s3|ver|#2a4a3a|#5ab08a|8|128|50|4500|6.4
+Samsung|Galaxy S24 FE|2024|649|0|s3|ver|#3a4a6a|#7a9ad0|8|128|50|4700|6.7
+Sony|Xperia 10 V|2023|449|0|s4|dual|#1a1a1d|#3a3a42|6|128|48|5000|6.1
+Sony|Xperia 10 VI|2024|449|0|s4|dual|#3a2a4a|#8a6ab0|8|128|48|5000|6.1
+OnePlus|Nord CE4|2024|349|0|s4|cir|#3a6a5a|#7ad0b0|8|128|50|5500|6.7
+OnePlus|Nord 4|2024|499|0|s4|cir|#2a3a4a|#6a8aa8|12|256|50|5500|6.74
+OnePlus|12R|2024|499|0|s4|cir|#1a2a4a|#3a5a9a|8|128|50|5500|6.78
+Xiaomi|13T|2023|550|0|s5|cir|#0f3a5a|#2a7ab0|12|256|50|5000|6.67
+Xiaomi|14T|2024|650|0|s5|cir|#2a2a3a|#6a6a88|12|256|50|5000|6.67
+Poco|F6|2024|380|0|s5|cir|#2a2a2d|#58585f|8|256|50|5000|6.67
+Poco|F6 Pro|2024|480|0|s5|cir|#1d1d22|#44444f|12|256|50|5000|6.67
+Redmi|Note 13 Pro+|2024|400|0|s5|cir|#4a2a6a|#a06ad0|8|256|200|5000|6.67
+Nothing|Phone (1)|2022|399|0|s4|nothing|#e8e8ea|#ffffff|8|128|50|4500|6.55
+Nothing|Phone (2a)|2024|359|0|s4|nothing|#e8e8ea|#ffffff|8|128|50|5000|6.7
+Nothing|Phone (2a) Plus|2024|399|0|s4|nothing|#2a2a2d|#58585f|12|256|50|5000|6.7
+Honor|200|2024|600|0|s5|cir|#2a4a2a|#6ab06a|8|256|50|5200|6.7
+Honor|200 Pro|2024|700|0|s5|cir|#1a1a2a|#3a3a6a|12|512|50|5200|6.78
+Realme|GT 6T|2024|400|0|s5|cir|#2a6a3a|#7ad08a|8|256|50|5500|6.78
+Realme|GT 6|2024|600|0|s5|cir|#c8d0d8|#f4f8fc|12|256|50|5500|6.78
+Apple|iPhone 12|2020|799|0|f1|dual|#2a3a5a|#5a7ab0|4|64|12|2815|6.1
+Apple|iPhone 13|2021|799|0|f1|dual|#2a2a4a|#6a6ab0|4|128|12|3240|6.1
+Apple|iPhone 14|2022|799|0|f1|dual|#4a2a6a|#a06ad0|6|128|12|3279|6.1
+Apple|iPhone 14 Pro|2022|999|0|f1|tri|#3a2a4a|#8a6ab0|6|128|48|3200|6.1
+Apple|iPhone 15|2023|799|0|f1|dual|#e8d8a0|#fff4cc|6|128|48|3349|6.1
+Apple|iPhone 15 Pro|2023|999|0|f1|tri|#8a8a90|#c8c8d0|8|256|48|3274|6.1
+Apple|iPhone 15 Pro Max|2023|1199|0|f1|tri|#2a3a5a|#5a7ab0|8|256|48|4441|6.7
+Apple|iPhone 16|2024|799|0|f1|dual|#1a5a5a|#3ab0b0|8|128|48|3561|6.1
+Apple|iPhone 16 Pro|2024|999|0|f1|tri|#6a5a4a|#bfa58a|8|256|48|3582|6.3
+Apple|iPhone 16 Pro Max|2024|1199|0|f1|tri|#5a4a3a|#c8a888|8|256|48|4685|6.9
+Apple|iPhone 17|2025|799|0|f1|dual|#2a4a8a|#6a9aea|8|256|48|3692|6.3
+Apple|iPhone 17 Pro|2025|1299|0|f1|tri|#c25a22|#f0904a|12|256|48|4252|6.3
+Samsung|Galaxy S22|2022|799|0|f2|ver|#2a4a3a|#5ab08a|8|128|50|3700|6.1
+Samsung|Galaxy S22+|2022|999|0|f2|ver|#4a2a3a|#c06a8a|8|256|50|4500|6.6
+Samsung|Galaxy S23|2023|799|0|f2|ver|#3a4a3a|#8ac08a|8|256|50|3900|6.1
+Samsung|Galaxy S23+|2023|999|0|f2|ver|#3a2a4a|#9a6ac0|8|256|50|4700|6.6
+Samsung|Galaxy S23 Ultra|2023|1199|0|f2|ver|#2a3a2a|#6a9a6a|12|256|200|5000|6.8
+Samsung|Galaxy S24|2024|799|0|f2|ver|#4a3a2a|#d0a46a|8|256|50|4000|6.2
+Samsung|Galaxy S24+|2024|999|0|f2|ver|#3a3a5a|#8a8ad0|12|256|50|4900|6.7
+Samsung|Galaxy S24 Ultra|2024|1299|0|f2|ver|#2a2a30|#5a5a68|12|512|200|5000|6.8
+Samsung|Galaxy S25|2025|799|0|f2|ver|#2a4a5a|#6ab0d0|12|256|50|4000|6.2
+Samsung|Galaxy S25+|2025|999|0|f2|ver|#4a4a5a|#9a9ab8|12|256|50|4900|6.7
+Samsung|Galaxy S25 Ultra|2025|1299|0|f2|ver|#3a4a5a|#8aa0b8|12|512|200|5000|6.9
+Samsung|Galaxy Z Flip 5|2023|999|0|f2|flip|#6a4a8a|#c8a0f0|8|256|12|3700|6.7
+Samsung|Galaxy Z Flip 6|2024|1099|0|f2|flip|#4a6a9a|#9ac0f0|12|256|50|4000|6.7
+Google|Pixel 8 Pro|2023|999|0|f3|bar|#2a3a5a|#7a9ad0|12|128|50|5050|6.7
+Google|Pixel 9|2024|799|0|f3|bar|#5a3a4a|#d08aa8|12|256|50|4700|6.3
+Google|Pixel 9 Pro|2024|999|0|f3|bar|#2a2a2d|#7a7a82|16|256|50|4700|6.3
+Google|Pixel 9 Pro XL|2024|1099|0|f3|bar|#4a5a4a|#9ab89a|16|256|50|5060|6.8
+Google|Pixel 10 Pro|2025|1199|0|f3|bar|#3a3a5a|#8a8ac8|16|256|50|4870|6.3
+Xiaomi|14|2024|999|0|f3|cir|#1a2a1a|#3a6a3a|12|256|50|4610|6.36
+Xiaomi|15|2025|899|0|f3|cir|#2a4a2a|#6ab06a|12|256|50|5240|6.36
+OnePlus|12|2024|799|0|f3|cir|#1a3a2a|#2a7a5a|12|256|50|5400|6.82
+OnePlus|13|2025|899|0|f3|cir|#1a1a2a|#3a3a6a|12|256|50|6000|6.82
+Sony|Xperia 5 V|2023|999|0|f3|dual|#4a2a3a|#a05a7a|8|128|52|5000|6.1
+Honor|Magic6 Pro|2024|1199|0|f3|cir|#1a1a2a|#3a3a6a|12|512|180|5600|6.8
+Motorola|Razr+ 2024|2024|999|0|f3|flip|#c04a7a|#f090b8|12|256|50|4000|6.9
+Vivo|X100 Pro|2024|1000|0|f3|cir|#2a3a5a|#6a8ad0|16|512|50|5400|6.78
+Oppo|Find X8|2024|900|0|f3|cir|#4a3a6a|#a08ad0|12|256|50|5630|6.59
+Xiaomi|14 Ultra|2024|1499|0|u1|cir|#1a1a1a|#3a3a3a|16|512|50|5000|6.73
+Xiaomi|15 Ultra|2025|1499|0|u1|cir|#2a3a4a|#6a8aa8|16|512|50|5410|6.73
+Huawei|Pura 70 Ultra|2024|1499|0|u1|cir|#2a3a2a|#7aa07a|16|512|50|5200|6.8
+Sony|Xperia 1 V|2023|1399|0|u1|ver|#1a1a1d|#3a3a42|12|256|52|5000|6.5
+Sony|Xperia 1 VI|2024|1399|0|u1|ver|#4a3a2a|#a08a6a|12|256|52|5000|6.5
+Oppo|Find X8 Ultra|2025|1450|0|u1|cir|#3a2a2a|#a06a6a|16|512|50|6100|6.82
+Vivo|X200 Ultra|2025|1400|0|u1|cir|#2a2a4a|#6a6ab0|16|512|200|6000|6.82
+Samsung|Galaxy S24 Ultra 1TB|2024|1659|0|u1|ver|#2a2a30|#8a8a98|12|1024|200|5000|6.8
+Samsung|Galaxy S26 Ultra 1TB|2026|1699|0|u1|ver|#3a3a4a|#9a9ab8|12|1024|200|5000|6.9
+Apple|iPhone 16 Pro Max 1TB|2024|1599|0|u1|tri|#2a2a2d|#58585f|8|1024|48|4685|6.9
+Vivo|X300 Ultra|2026|1599|0|u1|cir|#1a1a2a|#5a5a8a|16|512|200|6500|6.82
+Samsung|Galaxy Z Fold 5|2023|1799|0|u2|fold|#2a3a4a|#6a8aa8|12|256|50|4400|7.6
+Samsung|Galaxy Z Fold 6|2024|1899|0|u2|fold|#2a2a30|#6a6a78|12|512|50|4400|7.6
+Samsung|Galaxy Z Fold 7|2025|1999|0|u2|fold|#3a3a5a|#8a8ab8|12|512|200|4400|8.0
+Google|Pixel 9 Pro Fold|2024|1799|0|u2|fold|#6a5a3a|#c8b088|16|256|48|4650|8.0
+Google|Pixel 10 Pro Fold|2025|1799|0|u2|fold|#3a4a5a|#8aa8c8|16|256|48|5015|8.0
+Honor|Magic V3|2024|1999|0|u2|fold|#1a3a3a|#3a8a8a|16|512|50|5150|7.9
+Honor|Magic V5|2025|1999|0|u2|fold|#2a2a3a|#7a7a98|16|512|50|5820|8.0
+Huawei|Mate X6|2024|1900|0|u2|fold|#3a1a2a|#a04a6a|12|256|50|5110|7.93
+Oppo|Find N3|2023|1700|0|u2|fold|#3a3a2a|#a8a878|16|512|48|4805|7.82
+Xiaomi|Mix Fold 4|2024|1900|0|u2|fold|#1a2a3a|#3a6a9a|16|512|50|5100|7.98
+Huawei|Mate XT|2024|2800|0|u2|trifold|#2a1a1a|#a03a3a|16|512|50|5600|10.2
+Apple|iPhone 2G (2007)|2007|499|3000|u3|retro|#c8c8cc|#f0f0f4|0|4|2|1400|3.5
+Motorola|Razr V3|2004|500|1500|u3|clam|#b8b8c0|#e8e8f0|0|0|0|680|2.2
+Nokia|3310|2000|150|1200|u3|old|#2a4a8a|#5a8ad0|0|0|0|900|1.5
+Nokia|8110 «Банан»|1996|300|800|u3|old|#2a2a2d|#58585f|0|0|0|600|1.4
+Nokia|8800 Sirocco Gold|2006|1500|3500|u3|old|#a88222|#f5d572|0|1|2|1000|2.0
+HTC|Dream (G1)|2008|400|500|u3|old|#3a3a42|#6a6a78|0|0|3|1150|3.2
+Apple|iPhone 15 Pro Caviar Gold|2023|7000|7000|u3|tri|#a88222|#f5d572|8|1024|48|3274|6.1
+Vertu|Signature Touch|2014|10000|10000|u3|vertu|#8a6a2a|#e8c870|2|64|13|2275|5.0
+Huawei|Mate XT Ultimate Gold|2024|5000|5000|u3|trifold|#a88222|#f5d572|16|1024|50|5600|10.2
+Apple|iPhone 2G Sealed (2007)|2007|499|20000|u3|retro|#e8d8a0|#fff4cc|0|4|2|1400|3.5
+Samsung|Galaxy A14|2023|200|0|b1|ver|#2a3a3a|#5a8a8a|4|64|50|5000|6.6
+Samsung|Galaxy A24|2023|300|0|b1|ver|#4a2a4a|#a06aa0|6|128|50|5000|6.5
+Nokia|C32|2023|120|0|b2|dual|#2a4a4a|#5a9a9a|4|64|50|5000|6.5
+Motorola|Moto G24|2024|170|0|b2|dual|#3a3a6a|#7a7ad0|4|128|50|5000|6.56
+Motorola|Moto G13|2023|200|0|b2|dual|#1a4a5a|#4a9ab0|4|128|50|5000|6.5
+Xiaomi|Redmi 12C|2023|110|0|b3|dual|#2a3a4a|#5a7a9a|4|64|50|5000|6.71
+Xiaomi|Redmi 12|2023|150|0|b3|cir|#2a2a5a|#6a6ad0|8|128|50|5000|6.79
+Poco|M5|2022|200|0|b4|dual|#c8a82a|#f0d86a|4|128|50|5000|6.58
+Poco|X5|2023|250|0|b4|cir|#1a2a3a|#3a6a9a|6|128|48|5000|6.67
+Realme|C55|2023|180|0|b4|cir|#c8a82a|#f0d86a|6|128|64|5000|6.72
+Realme|11|2023|240|0|b4|cir|#2a5a2a|#6ab06a|8|256|108|5000|6.43
+Apple|iPhone SE 2020|2020|399|0|s1|single|#2a2a2d|#58585f|3|64|12|1821|4.7
+Apple|iPhone 12 mini|2020|699|0|s1|dual|#2a6a5a|#6ad0b0|4|64|12|2227|5.4
+Google|Pixel 5a|2021|449|0|s2|single|#2a3a2a|#5a7a5a|6|128|12|4680|6.34
+Google|Pixel 7|2022|599|0|f3|bar|#2a3a3a|#7a9a9a|8|128|50|4355|6.3
+Samsung|Galaxy A54|2023|449|0|s3|ver|#3a2a5a|#8a6ad0|8|128|50|5000|6.4
+Samsung|Galaxy S20 FE|2020|699|0|s3|ver|#2a4a6a|#6a9ad0|6|128|12|4500|6.5
+Motorola|Edge 40|2023|599|0|s4|dual|#3a2a2a|#a06a6a|8|256|50|4400|6.55
+OnePlus|Nord 3|2023|449|0|s4|cir|#2a4a3a|#6ab08a|16|256|50|5000|6.74
+Xiaomi|Redmi Note 12 Pro|2023|330|0|s5|cir|#2a2a2d|#58585f|8|256|50|5000|6.67`;
+const RN=['Обычный','Необычный','Редкий','Эпический','Легендарный','Мифический','Божественный'];
+const RC=['#9ea3b5','#3ddc84','#3b9bff','#b46bff','#ffc23a','#ff4d5e','#7df9ff'];
+// ценность: цена при выходе × износ по возрасту (−6% в год, не ниже 50%) × множитель класса (флагманы и ультра — «мега дорогие»); коллекционные — по рыночной цене ×3
+const RTH=[1500,3000,5500,17000,60000,230000];
+const rOf=v=>{let r=0;RTH.forEach((t,i)=>{if(v>=t)r=i+1});return r};
+const PH=PH_RAW.split('\n').map((l,i)=>{const a=l.split('|'),usd=+a[3],col=+a[4],y=+a[2];
+  const cat='bsfu'.indexOf(a[5][0]),v=Math.round(col?col*24:usd*8*Math.max(.5,1-.06*(2025-y))*[1,1.5,4,10][cat]);
+  return{i,id:'p'+i,b:a[0],n:a[1],y,usd,col,g:a[5],cat:'bsfu'.indexOf(a[5][0]),st:a[6],c1:a[7],c2:a[8],ram:+a[9],rom:+a[10],mp:+a[11],mah:+a[12],in:+a[13],v,r:rOf(v)}});
+const CATS=[
+ {n:'Бюджетки',d:'Телефоны до ~$300: надёжные рабочие лошадки',ic:'💚'},
+ {n:'Субфлагманы',d:'Топ за разумные деньги: $350–750',ic:'💙'},
+ {n:'Флагманы',d:'Главные модели лидеров рынка: $750–1300',ic:'💜'},
+ {n:'Ультрафлагманы',d:'Ультра-камеры, складные и коллекционные редкости',ic:'🧡'}
+];
+const GRP={
+ b1:{n:'Galaxy A',d:'Samsung Galaxy A и M'},b2:{n:'Nokia & Moto',d:'Nokia · Motorola'},b3:{n:'Xiaomi Family',d:'Xiaomi · Redmi'},b4:{n:'Poco & Realme',d:'Poco · Realme'},b5:{n:'Азия Бюджет',d:'Tecno · Infinix · Honor · ZTE · itel'},
+ s1:{n:'Свежие iPhone SE',d:'iPhone SE · 8 · XR · 11 · 16e'},s2:{n:'Pixel A',d:'Только Google Pixel A'},s3:{n:'Galaxy A/FE',d:'Samsung середняки и FE'},s4:{n:'Середняки Pro',d:'OnePlus · Sony · Nothing · Moto'},s5:{n:'Китайские хиты',d:'Xiaomi · Poco · Honor · Realme'},
+ f1:{n:'iPhone',d:'От iPhone 12 до iPhone 17 Pro'},f2:{n:'Galaxy S',d:'Серия S и Flip'},f3:{n:'Android Top',d:'Pixel · Xiaomi · OnePlus · Honor · Vivo'},
+ u1:{n:'Ультра-камеры',d:'Ultra, Pro Max и «терабайтники»'},u2:{n:'Складные',d:'Fold, Magic V, трифолд'},u3:{n:'Коллекционные',d:'Легенды прошлого и золото'}
+};
+const CONDS=[['Битый',.6,15],['Б/У',.85,35],['Хорошее',1,30],['Как новый',1.15,18],['Запечатан',1.5,2]];
+const SHINY=.015,SHINYM=2.5;
+/* ================= PHONEBATTLE ================= */
+const $=id=>document.getElementById(id);
+const tg=window.Telegram&&window.Telegram.WebApp;
+try{tg.ready();tg.expand();tg.disableVerticalSwipes&&tg.disableVerticalSwipes();tg.setHeaderColor&&tg.setHeaderColor('#090a14');tg.setBackgroundColor&&tg.setBackgroundColor('#090a14')}catch(e){}
+const fmt=n=>Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g,' ');
+const rnd=n=>Math.floor(Math.random()*n),pick=a=>a[rnd(a.length)];
+function wpick(a,wf){let s=0;a.forEach(x=>s+=wf(x));if(s<=0)return a[rnd(a.length)];let t=Math.random()*s;for(const x of a){t-=wf(x);if(t<0)return x}return a[a.length-1]}
+const hap=t=>{try{t==='h'?tg.HapticFeedback.impactOccurred('heavy'):t==='l'?tg.HapticFeedback.impactOccurred('light'):tg.HapticFeedback.notificationOccurred(t)}catch(e){}};
+const title=p=>p.b+' '+p.n;
+
+/* ---------- кейсы ---------- */
+// Каждый кейс — своя группа телефонов (модели не повторяются между кейсами).
+// Шанс телефона обратно пропорционален его цене, цена кейса = средняя ценность содержимого / 0,88 (кейс заметно невыгоден, как и должно быть).
+const CM=CONDS.reduce((a,c)=>a+c[1]*c[2],0)/100*(1-SHINY+SHINY*SHINYM);
+const pw=p=>1/Math.pow(p.v,1.25);
+const nice=x=>{const s=x<2000?10:x<10000?50:100;return Math.round(x/s)*s};
+const PAL=[['#2a8a5a','#6ad8a0'],['#2a5ad8','#6ab0ff'],['#7a2ad8','#c08aff'],['#d8921a','#ffd66a']];
+const GICON={b1:'📞',b2:'📟',b3:'🔶',b4:'🟦',b5:'🌏',s1:'🍏',s2:'🎯',s3:'🌠',s4:'🧭',s5:'🐉',f1:'🍎',f2:'🌌',f3:'🤖',u1:'📸',u2:'📖',u3:'🏺'};
+const CASES=Object.keys(GRP).map(g=>{
+  const pool=PH.filter(p=>p.g===g),s=pool.reduce((a,p)=>a+pw(p),0),ev=pool.reduce((a,p)=>a+pw(p)*p.v,0)/s*CM,cat='bsfu'.indexOf(g[0]);
+  return{id:g,g,cat,name:GRP[g].n,desc:GRP[g].d,cost:nice(ev/.88),ic:GICON[g],c:PAL[cat]};
+});
+const caseById=id=>CASES.find(c=>c.id===id);
+const casePool=c=>c.gs?PH.filter(p=>c.gs.includes(p.g)):PH.filter(p=>p.g===c.g);
+const caseSum=c=>casePool(c).reduce((a,p)=>a+pw(p),0);
+const caseChance=(c,p)=>pw(p)/caseSum(c)*100;
+function caseOdds(c){const pool=casePool(c),s=caseSum(c),o={};pool.forEach(p=>o[p.r]=(o[p.r]||0)+pw(p)/s*100);return Object.keys(o).map(Number).sort((a,b)=>a-b).map(r=>[r,o[r]])}
+function rollItem(c,lk){
+  let pl=casePool(c);
+  if(lk){const sr=pl.slice().sort((a,b)=>b.v-a.v);pl=sr.slice(0,Math.max(2,Math.ceil(sr.length*.4)))}
+  const ph=wpick(pl,pw);
+  const cd=wpick(CONDS.map((x,i)=>i),i=>CONDS[i][2]);
+  return{i:ph.i,c:cd,s:Math.random()<SHINY?1:0};
+}
+const itemVal=it=>Math.round(PH[it.i].v*CONDS[it.c][1]*(it.s?SHINYM:1));
+
+/* ---------- состояние ---------- */
+const KEY='pb_v1';
+const defS=()=>({coins:3000,xp:0,items:[],seen:{},stats:{open:0,sold:0,bat:0,win:0,con:0},tr:0,en:5,enAt:0,dl:{day:-1,streak:0},free:0,ach:{},br:{},rev:0,nu:1,snd:1,fi:0,q:{day:-1,p:{},d:{}},luck:0});
+let S=defS();
+function norm(o){const d=defS();for(const k in d)if(o[k]===undefined)o[k]=d[k];for(const k in d.stats)if(o.stats[k]===undefined)o.stats[k]=0;return o}
+try{const raw=localStorage.getItem(KEY);if(raw)S=norm(JSON.parse(raw))}catch(e){}
+let cloudT=0;
+function save(){
+  S.rev=Date.now();
+  try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}
+  clearTimeout(cloudT);cloudT=setTimeout(cloudSave,2000);
+}
+function cloudSave(){
+  try{
+    if(!tg||!tg.CloudStorage)return;
+    const raw=JSON.stringify(S),parts=[];
+    for(let i=0;i<raw.length;i+=3500)parts.push(raw.slice(i,i+3500));
+    parts.forEach((p,i)=>tg.CloudStorage.setItem('pb'+i,p));
+    tg.CloudStorage.setItem('pbn',parts.length+':'+S.rev);
+  }catch(e){}
+}
+function cloudLoad(){
+  try{
+    if(!tg||!tg.CloudStorage)return;
+    tg.CloudStorage.getItem('pbn',(err,v)=>{
+      if(err||!v)return;const [n,rev]=v.split(':').map(Number);
+      if(!n||rev<=S.rev)return;
+      const keys=Array.from({length:n},(_,i)=>'pb'+i);
+      tg.CloudStorage.getItems(keys,(e2,m)=>{
+        if(e2||!m)return;
+        try{const raw=keys.map(k=>m[k]||'').join('');const o=norm(JSON.parse(raw));if(o.rev>S.rev){S=o;try{localStorage.setItem(KEY,raw)}catch(e){};renderAll()}}catch(e){}
+      });
+    });
+  }catch(e){}
+}
+
+/* ---------- звук ---------- */
+let AC=null;
+function ac(){if(!S.snd)return null;if(!AC){try{AC=new(window.AudioContext||window.webkitAudioContext)()}catch(e){return null}}if(AC.state==='suspended')AC.resume();return AC}
+function tone(f,d,type,v,when){const a=ac();if(!a)return;const t=a.currentTime+(when||0),o=a.createOscillator(),g=a.createGain();o.type=type||'sine';o.frequency.value=f;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v||.07,t+.01);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g);g.connect(a.destination);o.start(t);o.stop(t+d+.02)}
+const sfx={
+  tick(){tone(820+Math.random()*120,.05,'square',.035)},
+  click(){tone(520,.06,'triangle',.05)},
+  coin(){tone(1200,.08,'sine',.06);tone(1700,.12,'sine',.06,.07)},
+  err(){tone(180,.18,'sawtooth',.06)},
+  rev(r){const base=[392,440,494,523,587,659,784][r]||440;tone(base,.25,'triangle',.08);tone(base*1.25,.25,'triangle',.07,.1);if(r>=2)tone(base*1.5,.35,'triangle',.07,.2);if(r>=4){tone(base*2,.5,'sine',.07,.32);tone(base*2.5,.6,'sine',.06,.45)}}
+};
+
+/* ---------- рисунок телефона ---------- */
+let gid=0;
+const lens=(x,y,r)=>`<circle cx="${x}" cy="${y}" r="${r}" fill="#0a0c12" stroke="#ffffff59" stroke-width="1.2"/><circle cx="${x}" cy="${y}" r="${(r*.55).toFixed(1)}" fill="#1b2a52"/><circle cx="${(x+r*.25).toFixed(1)}" cy="${(y-r*.25).toFixed(1)}" r="${(r*.17).toFixed(1)}" fill="#fff" opacity=".75"/>`;
+const IMG_BASE='';
+const slug=p=>(p.b+'-'+p.n).toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+let WIMG={};try{WIMG=JSON.parse(localStorage.getItem('pb_wimg')||'{}')}catch(e){}
+function psvg(p){const u=IMG_BASE?IMG_BASE+slug(p)+'.png':WIMG[slug(p)];return u?`<img class="pimg" src="${u}" alt="" loading="lazy" data-i="${p.i}" onerror="pfall(this)">`:pdraw(p)}
+function pfall(el){const p=PH[+el.dataset.i],w=WIMG[slug(p)];if(IMG_BASE&&w&&!el.dataset.w){el.dataset.w=1;el.src=w;return}el.outerHTML=pdraw(p)}
+const wTitle=p=>(p.b==='Apple'?'':p.b+' ')+p.n.replace(/ (1|2)TB$/,'');
+let WST='фото: ожидание';
+async function loadWiki(){WST='фото: запрос…';
+  const need=PH.filter(p=>WIMG[slug(p)]===undefined);if(!need.length){WST='фото: найдено '+Object.values(WIMG).filter(Boolean).length+' из '+PH.length;return}if(navigator.onLine===false){WST='фото: нет сети';return}let got=0;
+  for(let k=0;k<need.length;k+=40){
+    const ch=need.slice(k,k+40),ts=[...new Set(ch.map(wTitle))];
+    try{
+      const r=await fetch('https://en.wikipedia.org/w/api.php?action=query&format=json&origin=*&redirects=1&prop=pageimages&piprop=thumbnail&pithumbsize=500&titles='+encodeURIComponent(ts.join('|')));
+      const j=await r.json(),q=j.query||{},m1={},m2={},byT={};
+      (q.normalized||[]).forEach(x=>m1[x.from]=x.to);(q.redirects||[]).forEach(x=>m2[x.from]=x.to);
+      Object.values(q.pages||{}).forEach(pg=>{byT[pg.title]=pg.thumbnail&&pg.thumbnail.source||''});
+      ch.forEach(p=>{let t=wTitle(p);t=m1[t]||t;t=m2[t]||t;t=m1[t]||t;const u=byT[t]||'';WIMG[slug(p)]=u;if(u)got++});
+      try{localStorage.setItem('pb_wimg',JSON.stringify(WIMG))}catch(e){}
+    }catch(e){WST='фото: нет доступа к интернету из этого окна ('+(e&&e.message||e)+')';return}
+  }
+  WST='фото: найдено '+Object.values(WIMG).filter(Boolean).length+' из '+PH.length;
+  if(got&&!busy)try{renderAll()}catch(e){}
+}
+function psvg0(p){
+  const g='g'+(gid++),st=p.st;let b='',defs=`<linearGradient id="${g}a" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${p.c1}"/><stop offset="1" stop-color="${p.c2}"/></linearGradient><linearGradient id="${g}g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".32"/><stop offset=".45" stop-color="#fff" stop-opacity=".04"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>`;
+  const body=(x,y,w,h,r)=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${r}" fill="url(#${g}a)" stroke="#000" stroke-opacity=".55" stroke-width="2"/><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${r}" fill="url(#${g}g)"/>`;
+  const mod=(x,y,w,h,r)=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${r}" fill="#000" fill-opacity=".32" stroke="#fff" stroke-opacity=".22"/>`;
+  const keys=(x0,y0,cols,rows,w,h,gx,gy)=>{let s='';for(let r=0;r<rows;r++)for(let c=0;c<cols;c++)s+=`<rect x="${x0+c*(w+gx)}" y="${y0+r*(h+gy)}" width="${w}" height="${h}" rx="3" fill="#000" fill-opacity=".45" stroke="#fff" stroke-opacity=".2" stroke-width=".6"/>`;return s};
+  if(st==='tri'){b=body(6,4,88,192,17)+mod(12,12,46,46,11)+lens(26,26,8.5)+lens(26,45,8.5)+lens(45,35.5,8.5)+'<circle cx="49" cy="21" r="3" fill="#ffe9a0"/>'}
+  else if(st==='ver'){b=body(6,4,88,192,17)+lens(24,24,8)+lens(24,48,8)+lens(24,72,8)+'<circle cx="44" cy="24" r="3" fill="#ffe9a0"/>'}
+  else if(st==='dual'){b=body(6,4,88,192,17)+mod(14,12,30,54,15)+lens(29,28,8)+lens(29,50,8)+'<circle cx="55" cy="22" r="3" fill="#ffe9a0"/>'}
+  else if(st==='cir'){b=body(6,4,88,192,17)+`<circle cx="50" cy="44" r="27" fill="#000" fill-opacity=".34" stroke="#fff" stroke-opacity=".28" stroke-width="1.4"/>`+lens(50,32,8)+lens(39,52,8)+lens(61,52,8)}
+  else if(st==='bar'){b=body(6,4,88,192,17)+`<rect x="6" y="30" width="88" height="26" fill="#000" fill-opacity=".45"/>`+lens(34,43,8.5)+lens(58,43,8.5)+'<circle cx="76" cy="43" r="3" fill="#ffe9a0"/>'}
+  else if(st==='single'){b=body(6,4,88,192,17)+lens(23,24,8.5)+'<circle cx="42" cy="22" r="3" fill="#ffe9a0"/>'}
+  else if(st==='nothing'){b=body(6,4,88,192,17)+`<g stroke="#111" stroke-opacity=".55" stroke-width="1.4" fill="none"><path d="M18 90H82M18 106H82M18 122H82"/><circle cx="50" cy="150" r="14"/><path d="M14 20V80"/></g>`+lens(30,26,9)+lens(30,50,9)}
+  else if(st==='flip'){b=body(6,4,88,90,17)+body(6,102,88,94,17)+`<rect x="14" y="12" width="46" height="36" rx="9" fill="#06080e" stroke="#fff" stroke-opacity=".2"/>`+lens(70,24,6.5)+lens(70,42,6.5)+'<rect x="6" y="94" width="88" height="8" fill="#000" fill-opacity=".6"/>'}
+  else if(st==='fold'){b=body(6,4,88,192,15)+mod(12,10,34,44,10)+lens(23,22,7.5)+lens(23,42,7.5)+lens(37,32,7.5)+'<path d="M50 4V196" stroke="#000" stroke-opacity=".5" stroke-width="2.4"/><path d="M50 4V196" stroke="#fff" stroke-opacity=".18" stroke-width=".8" transform="translate(1.4 0)"/>'}
+  else if(st==='trifold'){b=body(6,4,88,192,12)+mod(12,10,40,40,10)+lens(24,22,7.5)+lens(24,38,7.5)+lens(40,30,7.5)+'<path d="M6 68H94M6 132H94" stroke="#000" stroke-opacity=".55" stroke-width="2.4"/><path d="M6 69.6H94M6 133.6H94" stroke="#fff" stroke-opacity=".2" stroke-width=".8"/>'}
+  else if(st==='retro'){b=body(6,4,88,192,18)+`<rect x="12" y="10" width="76" height="180" rx="12" fill="#0a0a0e"/><rect x="15" y="30" width="70" height="104" rx="3" fill="#1c3a6a"/><rect x="15" y="30" width="70" height="104" rx="3" fill="url(#${g}g)"/>`+[0,1,2,3].map(r=>[0,1,2,3].map(c=>`<rect x="${20+c*16}" y="${40+r*20}" width="11" height="11" rx="3" fill="${['#ff6a5a','#ffc23a','#3ddc84','#4aa8ff'][(r+c)%4]}" fill-opacity=".85"/>`).join('')).join('')+'<circle cx="50" cy="163" r="10" fill="none" stroke="#fff" stroke-opacity=".6" stroke-width="2"/><rect x="38" y="16" width="24" height="4" rx="2" fill="#fff" fill-opacity=".3"/>'}
+  else if(st==='old'){b=body(14,4,72,192,22)+`<rect x="22" y="16" width="56" height="44" rx="5" fill="#9bb38a" stroke="#000" stroke-opacity=".5"/><path d="M28 28H70M28 38H58M28 48H64" stroke="#2c3a24" stroke-width="3"/><ellipse cx="50" cy="78" rx="12" ry="7" fill="#000" fill-opacity=".45" stroke="#fff" stroke-opacity=".25"/>`+keys(22,94,3,4,16,15,4,5)}
+  else if(st==='clam'){b=body(14,4,72,88,14)+body(14,100,72,96,14)+`<rect x="30" y="14" width="40" height="22" rx="4" fill="#9bb3d8" stroke="#000" stroke-opacity=".5"/><rect x="38" y="8" width="24" height="3" rx="1.5" fill="#000" fill-opacity=".5"/><rect x="14" y="92" width="72" height="8" fill="#000" fill-opacity=".6"/>`+keys(22,112,3,4,16,13,4,5)}
+  else if(st==='vertu'){b=body(6,4,88,192,17)+`<rect x="14" y="12" width="72" height="176" rx="12" fill="none" stroke="#3a2200" stroke-opacity=".55" stroke-width="1.4" stroke-dasharray="3 3"/>`+lens(30,30,8.5)+lens(30,54,8.5)+'<text x="50" y="150" text-anchor="middle" font-size="36" font-weight="900" fill="#3a2200" fill-opacity=".6" font-family="serif">V</text>'}
+  else b=body(6,4,88,192,17);
+  return `<svg viewBox="0 0 100 200" xmlns="http://www.w3.org/2000/svg"><defs>${defs}</defs>${b}</svg>`;
+}
+/* ---------- точные рендеры обычных смартфонов ---------- */
+const SLAB={tri:1,ver:1,dual:1,cir:1,bar:1,single:1};
+function rig(p){
+  const b=p.b,n=p.n,t=b+' '+n;
+  if(b==='Apple'){
+    if(/17 Pro/.test(n))return'ip17p';
+    if(/(11|12|13|14|15|16) Pro/.test(n)||/Caviar/.test(n))return'ippro';
+    if(/iPhone (17|16)$/.test(n)||/Air/.test(n))return'ipvert';
+    if(/iPhone (11|12|13|14|15)( mini)?$/.test(n))return'ipdiag';
+    return'ipone';
+  }
+  if(b==='Samsung'){
+    if(/Ultra/.test(n))return'su';
+    if(/ S2\d(\+| FE)?$|FE$/.test(n)||/S2\d/.test(n))return'sv';
+    if(/A(0|1|2|M)|M1/.test(n.replace('Galaxy ','')))return/A0/.test(n)?'sdual':'spill';
+    return'spill';
+  }
+  if(b==='Google'){
+    if(/Fold/.test(n))return null;
+    if(/4a|5a/.test(n))return'pxsq';
+    if(/9a/.test(n))return'px9a';
+    if(/Pixel (9|9 Pro|9 Pro XL|10 Pro)$/.test(n))return/Pro/.test(n)?'pxpill3':'pxpill2';
+    return'pxbar';
+  }
+  if(b==='Sony')return/10/.test(n)?'sony2':'sony3';
+  if(b==='Honor'&&/Magic6|200/.test(n))return'ctr';
+  if(b==='Huawei')return'ctrbig';
+  if(b==='Vivo')return/Ultra/.test(n)?'vivoU':'vivo';
+  if(b==='Oppo')return/Ultra/.test(n)?'bigc':'bigcs';
+  if(b==='Xiaomi'&&/Ultra/.test(n))return'bigc';
+  if(b==='OnePlus'&&/^(12|13)/.test(n))return'bigcs';
+  if(b==='Xiaomi'&&/^(1[345]T?|13T)$/.test(n))return'bigcs';
+  if(/Redmi Note|Poco (X|F|M6)|Note 13|Realme GT|OnePlus 12R|Xiaomi 13T|Xiaomi 14T/.test(t))return'rect3';
+  if(/Redmi (12|13)$|Realme (1[12]|C55)|Poco X5|Infinix|Tecno|Honor X|Redmi Note 12/.test(t))return'rect2';
+  return p.st==='single'?'ipone':p.st==='ver'?'sv':p.st==='cir'?'rect3':'moto';
+}
+function psvg1(p){
+  const g='g'+(gid++),k=rig(p);if(!k)return psvg0(p);
+  const inch=p.in||6.3,W=Math.round((82+Math.max(-4,Math.min(7,(inch-6.1)*7)))*10)/10,H=192,x0=(100-W)/2,y0=4,x1=x0+W,
+   rr=/^(ip|px)/.test(k)||k==='ippro'?W*.2:/^s/.test(k)?W*.14:W*.17,fr=2.4;
+  const apple=p.b==='Apple',pro=/Pro|Ultra|Fold/.test(p.n),
+   defs=`<linearGradient id="${g}a" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${p.c1}"/><stop offset="1" stop-color="${p.c2}"/></linearGradient>
+<linearGradient id="${g}f" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="${p.c2}"/><stop offset=".2" stop-color="#fff" stop-opacity=".9"/><stop offset=".5" stop-color="${p.c1}"/><stop offset=".8" stop-color="#fff" stop-opacity=".85"/><stop offset="1" stop-color="${p.c2}"/></linearGradient>
+<linearGradient id="${g}g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".36"/><stop offset=".4" stop-color="#fff" stop-opacity=".05"/><stop offset=".62" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#fff" stop-opacity=".12"/></linearGradient>
+<radialGradient id="${g}l" cx=".4" cy=".35" r=".7"><stop offset="0" stop-color="#5b6fc0"/><stop offset=".45" stop-color="#1c2552"/><stop offset="1" stop-color="#05060c"/></radialGradient>
+<linearGradient id="${g}m" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".95"/><stop offset=".5" stop-color="#b8bcc8"/><stop offset="1" stop-color="#7a7f90"/></linearGradient>`;
+  const L=(x,y,r)=>`<circle cx="${x}" cy="${y}" r="${r+1.6}" fill="#000" opacity=".45"/><circle cx="${x}" cy="${y}" r="${r}" fill="url(#${g}m)"/><circle cx="${x}" cy="${y}" r="${r*.82}" fill="#05060a"/><circle cx="${x}" cy="${y}" r="${r*.62}" fill="url(#${g}l)"/><circle cx="${x}" cy="${y}" r="${r*.3}" fill="#0a0e24"/><circle cx="${(x-r*.28).toFixed(1)}" cy="${(y-r*.3).toFixed(1)}" r="${(r*.15).toFixed(1)}" fill="#fff" opacity=".8"/>`;
+  const fl=(x,y,r)=>`<circle cx="${x}" cy="${y}" r="${r}" fill="#f4e4b0" stroke="#000" stroke-opacity=".35" stroke-width=".6"/><circle cx="${x}" cy="${y}" r="${r*.55}" fill="#fff8dc"/>`;
+  const dot=(x,y,r)=>`<circle cx="${x}" cy="${y}" r="${r}" fill="#0a0b10" stroke="#fff" stroke-opacity=".25" stroke-width=".5"/>`;
+  const isl=(x,y,w,h,r,o)=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${r}" fill="${o&&o.f||'#000'}" fill-opacity="${o&&o.fo||.34}" stroke="${o&&o.s||'#fff'}" stroke-opacity="${o&&o.so||.3}" stroke-width="1.2"/><rect x="${x+.6}" y="${y+.6}" width="${w-1.2}" height="${h-1.2}" rx="${r-.6}" fill="none" stroke="#000" stroke-opacity=".25" stroke-width=".8"/>`;
+  // корпус: рамка + стекло + блик + кнопки
+  let b=`<rect x="${x1-.4}" y="${y0+46}" width="2.4" height="26" rx="1.2" fill="url(#${g}f)" stroke="#000" stroke-opacity=".5" stroke-width=".6"/>`+
+   `<rect x="${x0-2}" y="${y0+34}" width="2.4" height="16" rx="1.2" fill="url(#${g}f)" stroke="#000" stroke-opacity=".5" stroke-width=".6"/><rect x="${x0-2}" y="${y0+54}" width="2.4" height="16" rx="1.2" fill="url(#${g}f)" stroke="#000" stroke-opacity=".5" stroke-width=".6"/>`+
+   `<rect x="${x0}" y="${y0}" width="${W}" height="${H}" rx="${rr}" fill="url(#${g}f)" stroke="#000" stroke-opacity=".6" stroke-width="1.6"/>`+
+   `<rect x="${x0+fr}" y="${y0+fr}" width="${W-2*fr}" height="${H-2*fr}" rx="${rr-fr*.8}" fill="url(#${g}a)" stroke="#000" stroke-opacity=".35" stroke-width=".8"/>`+
+   `<rect x="${x0+fr}" y="${y0+fr}" width="${W-2*fr}" height="${H-2*fr}" rx="${rr-fr*.8}" fill="url(#${g}g)"/>`;
+  const X=x0+fr,Y=y0+fr,w=W-2*fr; // внутренняя область
+  const m={
+   ippro:()=>isl(X+5,Y+5,46,46,12,{fo:.3,so:.4})+L(X+19,Y+19,9.6)+L(X+19,Y+38,9.6)+L(X+37,Y+28.5,9.6)+fl(X+39,Y+13,3.4)+dot(X+39,Y+42,2.6)+dot(X+30,Y+8,1.2),
+   ip17p:()=>isl(X-.4,Y+8,w+.8,50,9,{f:'#fff',fo:.1,s:'#fff',so:.35})+L(X+17,Y+22,9)+L(X+17,Y+43,9)+L(X+38,Y+32.5,9)+fl(X+w-15,Y+20,3.8)+dot(X+w-15,Y+36,2.8)+dot(X+w-15,Y+48,1.4),
+   ipvert:()=>isl(X+6,Y+6,28,54,14,{fo:.3,so:.4})+L(X+20,Y+21,8.8)+L(X+20,Y+45,8.8)+fl(X+43,Y+12,3)+dot(X+43,Y+22,1.4),
+   ipdiag:()=>isl(X+5,Y+5,42,42,12,{fo:.3,so:.4})+L(X+17,Y+17,9)+L(X+34,Y+34,9)+fl(X+36,Y+12,3)+dot(X+17,Y+34,2),
+   ipone:()=>L(X+15,Y+16,8.6)+fl(X+31,Y+11,2.8)+dot(X+31,Y+22,1.2),
+   su:()=>L(X+13,Y+16,8)+L(X+13,Y+37,8)+L(X+13,Y+58,8)+L(X+34,Y+58,6.2)+fl(X+30,Y+12,2.4)+dot(X+30,Y+24,2)+dot(X+30,Y+36,1.6),
+   sv:()=>L(X+13,Y+16,8)+L(X+13,Y+37,8)+L(X+13,Y+58,8)+fl(X+30,Y+14,2.4)+dot(X+30,Y+26,1.8),
+   spill:()=>isl(X+4,Y+5,24,66,12,{fo:.34})+L(X+16,Y+17,7.2)+L(X+16,Y+37,7.2)+L(X+16,Y+57,7.2)+fl(X+36,Y+12,2.4),
+   sdual:()=>isl(X+4,Y+5,24,48,12,{fo:.34})+L(X+16,Y+17,7.2)+L(X+16,Y+39,7.2)+fl(X+36,Y+12,2.4),
+   pxbar:()=>`<rect x="${X}" y="${Y+24}" width="${w}" height="26" fill="#07080c" fill-opacity=".86"/><rect x="${X}" y="${Y+24}" width="${w}" height="26" fill="none" stroke="#fff" stroke-opacity=".15"/>`+L(X+w*.34,Y+37,8.4)+(/Pro/.test(p.n)?L(X+w*.64,Y+37,8.4)+fl(X+w-8,Y+31,2.2):L(X+w*.62,Y+37,8.4)+fl(X+w-9,Y+37,2.4)),
+   pxpill2:()=>isl(X+3,Y+10,w-6,30,14,{f:'#07080c',fo:.9,so:.18})+L(X+w*.3,Y+25,8.2)+L(X+w*.58,Y+25,8.2)+fl(X+w-13,Y+25,2.5),
+   pxpill3:()=>isl(X+3,Y+10,w-6,32,15,{f:'#07080c',fo:.9,so:.18})+L(X+w*.27,Y+26,8.6)+L(X+w*.55,Y+26,8.6)+L(X+w*.78,Y+26,5.6)+fl(X+w*.78,Y+13.5,2),
+   px9a:()=>isl(X+4,Y+8,w-8,24,12,{f:'#0a0b10',fo:.7,so:.12})+L(X+w*.33,Y+20,7.6)+L(X+w*.62,Y+20,7.6),
+   pxsq:()=>isl(X+4,Y+5,26,26,8,{fo:.34})+L(X+17,Y+18,8)+fl(X+36,Y+10,2.4),
+   sony3:()=>L(X+12,Y+16,7.6)+L(X+12,Y+36,7.6)+L(X+12,Y+56,7.6)+fl(X+28,Y+14,2.2)+dot(X+28,Y+26,1.8),
+   sony2:()=>L(X+12,Y+16,7.6)+L(X+12,Y+36,7.6)+fl(X+28,Y+14,2.2),
+   ctr:()=>`<circle cx="${50}" cy="${Y+31}" r="25" fill="#000" fill-opacity=".34" stroke="#fff" stroke-opacity=".3" stroke-width="1.4"/><circle cx="50" cy="${Y+31}" r="21.5" fill="none" stroke="#fff" stroke-opacity=".12"/>`+L(41,Y+22,8)+L(59,Y+22,8)+L(50,Y+42,8)+fl(62,Y+40,2),
+   ctrbig:()=>`<circle cx="50" cy="${Y+33}" r="29" fill="#000" fill-opacity=".34" stroke="#fff" stroke-opacity=".35" stroke-width="2"/><circle cx="50" cy="${Y+33}" r="25" fill="none" stroke="#fff" stroke-opacity=".14"/>`+L(40,Y+23,8.6)+L(60,Y+23,8.6)+L(50,Y+44,8.6)+fl(64,Y+44,2.2),
+   vivo:()=>`<circle cx="${X+27}" cy="${Y+28}" r="23" fill="#000" fill-opacity=".34" stroke="#e8c978" stroke-opacity=".7" stroke-width="1.8"/>`+L(X+18,Y+19,7.4)+L(X+37,Y+19,7.4)+L(X+27,Y+37,7.4)+fl(X+w-12,Y+10,2.4),
+   vivoU:()=>`<circle cx="${X+31}" cy="${Y+32}" r="28" fill="#000" fill-opacity=".36" stroke="#e8c978" stroke-opacity=".85" stroke-width="2.2"/><circle cx="${X+31}" cy="${Y+32}" r="24" fill="none" stroke="#fff" stroke-opacity=".15"/>`+L(X+21,Y+21,8)+L(X+42,Y+21,8)+L(X+31,Y+43,8)+fl(X+w-10,Y+10,2.4),
+   bigcs:()=>`<circle cx="${X+27}" cy="${Y+27}" r="23" fill="#000" fill-opacity=".34" stroke="#fff" stroke-opacity=".3" stroke-width="1.6"/>`+L(X+18,Y+18,7.6)+L(X+36,Y+18,7.6)+L(X+27,Y+36,7.6)+fl(X+w-11,Y+10,2.2),
+   bigc:()=>`<circle cx="${X+32}" cy="${Y+32}" r="29" fill="#000" fill-opacity=".36" stroke="#fff" stroke-opacity=".38" stroke-width="2.2"/><circle cx="${X+32}" cy="${Y+32}" r="25" fill="none" stroke="#fff" stroke-opacity=".14"/>`+L(X+21,Y+21,8.4)+L(X+43,Y+21,8.4)+L(X+21,Y+43,8.4)+L(X+43,Y+43,8.4)+fl(X+w-10,Y+10,2.2),
+   rect3:()=>isl(X+4,Y+5,36,40,9,{fo:.4})+L(X+14,Y+15,7)+L(X+14,Y+34,7)+L(X+30,Y+24.5,7)+fl(X+w-9,Y+11,2.2),
+   rect2:()=>isl(X+4,Y+5,34,32,9,{fo:.4})+L(X+14,Y+15,7)+L(X+28,Y+22,7)+fl(X+w-9,Y+11,2.2),
+   moto:()=>isl(X+4,Y+5,24,46,12,{fo:.4})+L(X+16,Y+17,6.8)+L(X+16,Y+37,6.8)+fl(X+37,Y+13,2.2)
+  }[k];
+  return `<svg viewBox="0 0 100 200" xmlns="http://www.w3.org/2000/svg"><defs>${defs}</defs>${b}${m()}</svg>`;
+}
+const pdraw=p=>SLAB[p.st]?psvg1(p):psvg0(p);
+const CASE_IMG_BASE='cases/';
+function cimg(c){if(!CASE_IMG_BASE)return csvg(c);return `<img class="cimg" src="${CASE_IMG_BASE}${c.id}.png" alt="" loading="lazy" data-c="${c.id}" onerror="cfall(this)">`}
+function cfall(el){el.outerHTML=csvg(el.dataset.c==='free'?FREE:caseById(el.dataset.c))}
+function csvg(c){
+  const g='c'+(gid++),lead=casePool(c).reduce((m,p)=>p.v>m.v?p:m),ph=pdraw(lead).replace('<svg viewBox="0 0 100 200" xmlns="http://www.w3.org/2000/svg">','<svg x="35" y="-12" width="50" height="100" viewBox="0 0 100 200">');
+  return `<svg viewBox="0 -12 120 122" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="${g}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${c.c[0]}"/><stop offset="1" stop-color="${c.c[1]}"/></linearGradient><radialGradient id="${g}r"><stop offset="0" stop-color="${c.c[1]}" stop-opacity=".7"/><stop offset="1" stop-color="${c.c[1]}" stop-opacity="0"/></radialGradient></defs>
+  <circle cx="60" cy="42" r="40" fill="url(#${g}r)"/><ellipse cx="60" cy="102" rx="42" ry="6" fill="#000" opacity=".45"/>
+  <g transform="rotate(-8 60 40)">${ph}</g>
+  <rect x="20" y="42" width="80" height="56" rx="9" fill="url(#${g})" stroke="#000" stroke-opacity=".4"/><rect x="15" y="32" width="90" height="20" rx="7" fill="url(#${g})" stroke="#000" stroke-opacity=".4"/><rect x="15" y="32" width="90" height="20" rx="7" fill="#fff" opacity=".14"/>
+  <rect x="53" y="32" width="14" height="66" fill="#ffd66a" opacity=".92"/></svg>`;
+}
+/* ---------- утилиты UI ---------- */
+const CU='🪙',money=n=>fmt(n)+' '+CU;
+const FREE={id:'free',name:'Бесплатный',cost:0,gs:['b1','b2','b3'],ic:'🎁',c:['#2aa86a','#9dff6a']};
+const FREE_CD=8*3600e3,INV_MAX=2000,FEE=.95;
+const sellPrice=it=>Math.round(itemVal(it)*FEE);
+/* ---------- задания и удача ---------- */
+const QT=[['open','Открой кейсов: {n}','open',[3,5,8]],['bat','Сыграй батлов: {n}','bat',[2,3,5]],['win','Выиграй батлов: {n}','win',[1,2,3]],['sold','Продай телефонов: {n}','sold',[2,4,6]],['new','Найди новых моделей: {n}','new',[1,2,3]],['con','Сделай контракт','con',[1]]];
+function qEnsure(){const d=dayNum();if(S.q.day!==d)S.q={day:d,p:{},d:{}}}
+function qAdd(k,n){qEnsure();S.q.p[k]=(S.q.p[k]||0)+(n===undefined?1:n)}
+function quests(){qEnsure();let x=S.q.day*9301+49297;const r=()=>(x=(x*9301+49297)%233280)/233280,pool=QT.slice(),out=[],L=lvInfo().L;
+  for(let i=0;i<3;i++){const t=pool.splice(Math.floor(r()*pool.length),1)[0],j=Math.min(t[3].length-1,Math.floor(r()*t[3].length)),n=t[3][j];out.push({id:t[0],k:t[2],n,t:t[1].replace('{n}',n),rw:Math.round((250+60*L)*(1+j*.6))})}return out}
+function qDone(){const qs=quests();return qs.filter(q=>S.q.d[q.id]).length}
+function qReady(){const qs=quests();return qs.some(q=>!S.q.d[q.id]&&(S.q.p[q.k]||0)>=q.n)}
+function questHTML(){const qs=quests();return `<h2>Задания на сегодня</h2><div class="panel">`+qs.map((q,i)=>{const cur=Math.min(q.n,S.q.p[q.k]||0),d=!!S.q.d[q.id],can=!d&&cur>=q.n;return `<div class="li"><div class="ic">🎯</div><div class="tx">${q.t}<small>${cur}/${q.n}</small><div class="bar" style="margin-top:6px"><i style="width:${cur/q.n*100}%"></i></div></div>${d?'<span style="color:var(--ok);font-weight:800">✔</span>':can?`<button class="btn gold" style="padding:8px 12px;font-size:12px" data-act="quest" data-q="${i}">+${fmt(q.rw)}</button>`:`<span style="color:var(--mu);font-size:12px">${fmt(q.rw)} ${CU}</span>`}</div>`}).join('')+`<div class="sub" style="margin:8px 0 0;text-align:center">Выполни все 3 — бонус ×2 от последней награды. Обновляются каждый день.</div></div>`}
+function luckRoll(c){if((S.luck||0)>=100){S.luck=0;return rollItem(c,1)}S.luck=Math.min(100,(S.luck||0)+10);return rollItem(c)}
+
+const freeLeft=()=>Math.max(0,S.free+FREE_CD-Date.now());
+const tm=ms=>{const s=Math.ceil(ms/1000),h=Math.floor(s/3600),m=Math.floor(s%3600/60),c=s%60;return h?`${h}ч ${m}м`:`${m}:${String(c).padStart(2,'0')}`};
+let toastT=0;
+function toast(t){const e=$('toast');e.textContent=t;e.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>e.classList.remove('on'),2200)}
+function openModal(h){$('mdb').innerHTML=h;$('md').classList.add('on');$('mdb').scrollTop=0}
+function closeModal(){$('md').classList.remove('on')}
+$('md').addEventListener('click',e=>{if(e.target.id==='md')closeModal()});
+function confetti(n,col){const d=document.createElement('div');d.className='conf';const cs=[col,'#fff','#ffc23a','#00d9ff','#7b5cff'];for(let i=0;i<n;i++){const p=document.createElement('i');p.style.left=Math.random()*100+'%';p.style.background=cs[i%cs.length];p.style.animationDuration=(1.6+Math.random()*1.6)+'s';p.style.animationDelay=Math.random()*.4+'s';d.appendChild(p)}document.body.appendChild(d);setTimeout(()=>d.remove(),4200)}
+
+/* ---------- прогресс ---------- */
+const xpNeed=L=>Math.round(100*Math.pow(L,1.35));
+function lvInfo(){let L=1,x=S.xp;while(x>=xpNeed(L)){x-=xpNeed(L);L++}return{L,cur:x,need:xpNeed(L)}}
+function addXp(n){const a=lvInfo().L;S.xp+=n;const b=lvInfo().L;if(b>a){const r=300+120*b;S.coins+=r;toast(`🎉 Уровень ${b}! +${fmt(r)} ${CU}`);sfx.rev(4);hap('success')}}
+function addItem(x){
+  const p=PH[x.i];if(!S.seen[x.i]){x.nw=1;qAdd('new')}S.seen[x.i]=1;
+  if(S.items.length>=INV_MAX){const v=sellPrice(x);S.coins+=v;toast('Коллекция заполнена — телефон продан автоматически');return Object.assign(x,{u:-1,auto:1})}
+  x.u=S.nu++;S.items.push(x);return x;
+}
+const byU=u=>S.items.find(x=>x.u===u);
+function sellItems(list){let sum=0;const set=new Set(list.map(x=>x.u));S.items=S.items.filter(x=>{if(set.has(x.u)){sum+=sellPrice(x);return false}return true});S.coins+=sum;S.stats.sold+=list.length;qAdd('sold',list.length);if(S.fi&&!byU(S.fi))S.fi=0;cSel=cSel.filter(u=>byU(u));return sum}
+
+/* ---------- карточки ---------- */
+function pcard(ph,o){
+  o=o||{};
+  return `<div class="pc${o.sh?' sh':''}${o.lock?' lock':''}${o.sel?' sel':''}" style="--rc:${RC[ph.r]}" ${o.attr||''}>${o.qty>1?`<div class="qty">×${o.qty}</div>`:''}${psvg(ph)}<div class="nm">${title(ph)}</div><div class="vl">${o.lock?RN[ph.r]:money(o.val!=null?o.val:ph.v)}</div>${o.cond?`<div class="cd">${o.cond}</div>`:''}</div>`;
+}
+const icard=(it,o)=>pcard(PH[it.i],Object.assign({val:itemVal(it),cond:CONDS[it.c][0]+(it.s?' · ★ лимитка':''),sh:it.s,attr:`data-u="${it.u}"`},o||{}));
+const specRow=p=>{const mem=p.ram?`${p.ram}/${p.rom>=1024?p.rom/1024+' ТБ':p.rom+' ГБ'}`:(p.rom?p.rom+' ГБ':'—');return `<div class="spec"><div>Память (ОЗУ/ПЗУ)<b>${mem}</b></div><div>Камера<b>${p.mp?p.mp+' Мп':'—'}</b></div><div>Батарея<b>${fmt(p.mah)} мАч</b></div><div>Экран<b>${p.in}″</b></div></div>`};
+function itemModal(it,mode){
+  const p=PH[it.i],v=itemVal(it),sp=sellPrice(it);
+  let btn='';
+  if(mode==='fresh')btn=`<div class="row"><button class="btn g" data-act="sell1" data-u="${it.u}">Продать · ${fmt(sp)}</button><button class="btn" data-act="close">Оставить</button></div>`;
+  else if(mode==='view')btn=`<div class="row"><button class="btn g" data-act="sell1" data-u="${it.u}">Продать · ${fmt(sp)}</button><button class="btn" data-act="fighter" data-u="${it.u}">⚔️ В бой</button></div><button class="btn w g" style="margin-top:8px" data-act="close">Закрыть</button>`;
+  else btn=`<button class="btn w g" data-act="close">Закрыть</button>`;
+  openModal(`<div class="big glow" style="--rc:${RC[p.r]}"><span class="rn">${RN[p.r]}</span><h3>${title(p)}</h3><div class="meta">${mode==='fresh'&&it.nw?'<b style="color:var(--gold)">🆕 Новая модель в коллекции!</b> · ':''}${p.y} год · ${CONDS[it.c][0]}${it.s?' · ★ лимитка (×'+SHINYM+')':''}</div>${psvg(p)}<div class="val">${money(v)}</div><div class="meta" style="margin:-6px 0 8px">${CONDS[it.c][1]===1&&!it.s?'':'базовая '+fmt(p.v)+' × '+CONDS[it.c][1]+(it.s?' × '+SHINYM:'')+' ('+CONDS[it.c][0].toLowerCase()+') · '}продажа за ${Math.round(FEE*100)}%</div>${specRow(p)}${btn}</div>`);
+}
+
+/* ---------- навигация ---------- */
+let cur='home',colTab='mine',fR=-1,fB='all',fS='v',colPage=1,cSel=[],caseId='b1',busy=false;
+function go(s){
+  if(busy&&s!=='case')return;
+  cur=s;document.querySelectorAll('.scr').forEach(e=>e.classList.toggle('on',e.id==='s-'+s));
+  document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.go===(s==='case'?'home':s)));
+  try{s==='home'?tg.BackButton.hide():tg.BackButton.show()}catch(e){}
+  closeModal();render(s);$('s-'+s).scrollTop=0;
+}
+try{tg.BackButton.onClick(()=>{if(!busy)go('home')})}catch(e){}
+function render(s){({home:renderHome,case:renderCase,col:renderCol,bat:renderBat,con:renderCon,bon:renderBon})[s]()}
+function renderHead(){$('coins').textContent=fmt(S.coins)+' '+CU;$('lvc').textContent='Ур. '+lvInfo().L;$('snd').textContent=S.snd?'🔊':'🔇';$('bdot').classList.toggle('on',bonusDot())}
+function renderAll(){renderHead();render(cur)}
+function bonusDot(){return qReady()||S.dl.day!==dayNum()||freeLeft()===0||ACH.some(a=>!S.ach[a[0]]&&a[4]()>=a[5])}
+const dayNum=()=>Math.floor((Date.now()-new Date().getTimezoneOffset()*60000)/864e5);
+
+/* ---------- главная ---------- */
+function renderHome(){
+  const li=lvInfo(),own=Object.keys(S.seen).length,tot=S.items.reduce((a,it)=>a+itemVal(it),0),fr=freeLeft();
+  let h=`<div class="panel hero"><div class="t"><b>Уровень ${li.L}</b><div class="sub" style="margin:2px 0 0">${fmt(li.cur)} / ${fmt(li.need)} опыта</div><div class="bar"><i style="width:${Math.min(100,li.cur/li.need*100)}%"></i></div></div><div style="text-align:right"><div style="font-size:12px;color:var(--mu)">Коллекция</div><b>${own}/${PH.length}</b><div style="font-size:12px;color:var(--gold)">${money(tot)}</div></div></div><div class="panel" data-go="bon" style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;padding:12px 14px"><span>🎯 <b>Задания на сегодня</b> · ${qDone()}/3</span><span style="color:${qReady()?'var(--gold)':'var(--mu)'}">${qReady()?'забрать награду ›':'›'}</span></div><h2>Кейсы</h2><div class="cases" style="display:block">`;
+  const card=c=>`<div class="case" data-case="${c.id}">${cimg(c)}<b>${c.name}</b><small>${c.desc}</small><span class="price">${fmt(c.cost)} ${CU}</span></div>`;
+  h+=`<div class="crow"><div class="case" data-case="free">${cimg(FREE)}<b>Бесплатный кейс</b><small data-tm="free">${fr>0?'Через '+tm(fr):'Готов к открытию!'}</small><span class="price free" id="frb">${fr>0?'⏳ Ждём':'Открыть'}</span></div></div></div>`;
+  CATS.forEach((ct,ci)=>{h+=`<div class="cat"><div class="ch"><span>${ct.ic}</span><div><b>${ct.n}</b><small>${ct.d}</small></div></div><div class="crow">${CASES.filter(c=>c.cat===ci).map(card).join('')}</div></div>`});
+  $('s-home').innerHTML=h;
+}
+function openFree(){
+  const fr=freeLeft();if(fr>0){sfx.err();toast('Следующий бесплатный кейс через '+tm(fr));return}
+  const it=addItem(rollItem(FREE));S.free=Date.now();S.stats.open++;addXp(10+8*PH[it.i].r);save();renderAll();reveal(it,true);
+}
+
+/* ---------- экран кейса ---------- */
+function renderCase(){
+  const c=caseById(caseId),odds=caseOdds(c),pool=casePool(c);
+  let h=`<div class="back" data-go="home">‹ Кейсы</div><h2>${c.name}</h2><div class="sub">${c.desc}. В кейсе ${pool.length} моделей — они не повторяются в других кейсах. Цена на карточке — для состояния «Хорошее». У выпавшего телефона она меняется от состояния: Битый ×0,6 · Б/У ×0,85 · Хорошее ×1 · Как новый ×1,15 · Запечатан ×1,5, плюс шанс на ★ лимитку (×${SHINYM}). Продать можно за ${Math.round(FEE*100)}% оценки.</div>`;
+  h+=`<div id="rl"><div id="mk"></div><div id="strip"></div></div>`;
+  {const lk=Math.min(100,S.luck||0);h+=`<div class="panel" style="padding:10px 14px;margin-bottom:12px"><div style="display:flex;justify-content:space-between;font-size:13px;font-weight:800"><span>🍀 Удача</span><span style="color:${lk>=100?'var(--gold)':'var(--mu)'}">${lk>=100?'ГОТОВА — следующий кейс даст топ!':lk+'/100'}</span></div><div class="bar" style="margin-top:6px"><i style="width:${lk}%"></i></div><div class="sub" style="margin:6px 0 0;font-size:11px">Каждое открытие копит удачу. При 100 следующий кейс гарантированно выпадет из лучших 40% телефонов.</div></div>`}
+  h+=`<div class="row" style="margin-bottom:12px"><button class="btn w" id="o1" data-act="open1">Открыть · ${fmt(c.cost)} ${CU}</button><button class="btn g w" id="o5" data-act="open5">×5 · ${fmt(c.cost*5)} ${CU}</button></div><button class="btn g w dis" id="sk" data-act="skip" style="display:none;margin-bottom:12px">Пропустить</button>`;
+  h+=`<div class="odds">${odds.map(([r,p])=>`<span style="--rc:${RC[r]}">${RN[r]}<b>${p>=1?p.toFixed(p>=10?0:1):p.toFixed(2)}%</b></span>`).join('')}</div><h2 style="font-size:16px">Что внутри</h2><div class="grid">`;
+  h+=pool.slice().sort((a,b)=>b.v-a.v).map(p=>{const ch=caseChance(c,p);return pcard(p,{cond:'шанс '+(ch>=1?ch.toFixed(1):ch.toFixed(2))+'%',attr:`data-cat="${p.i}"`})}).join('')+'</div>';
+  $('s-case').innerHTML=h;
+  const strip=$('strip');let s='';for(let k=0;k<14;k++){const x=rollItem(c),p=PH[x.i];s+=`<div class="ri" style="--rc:${RC[p.r]}">${psvg(p)}<span>${title(p)}</span></div>`}strip.innerHTML=s;
+}
+function tickLoop(strip,vw,state){
+  let last=-1;
+  const f=()=>{if(state.done)return;const m=/matrix\(([^)]+)\)/.exec(getComputedStyle(strip).transform);if(m){const tx=parseFloat(m[1].split(',')[4]),idx=Math.floor((-tx+vw/2)/126);if(idx!==last){last=idx;sfx.tick()}}requestAnimationFrame(f)};
+  requestAnimationFrame(f);
+}
+let skipFn=null;
+function open1(){
+  const c=caseById(caseId);if(busy)return;
+  if(S.coins<c.cost){sfx.err();hap('error');toast('Не хватает монет');return}
+  busy=true;S.coins-=c.cost;
+  const win=luckRoll(c),it=addItem(win);S.stats.open++;qAdd('open');addXp(10+8*PH[win.i].r);save();renderHead();
+  const strip=$('strip'),N=56,WIN=46,cells=[];
+  for(let k=0;k<N;k++)cells.push(k===WIN?win:rollItem(c));
+  strip.innerHTML=cells.map(x=>{const p=PH[x.i];return `<div class="ri" style="--rc:${RC[p.r]}">${psvg(p)}<span>${title(p)}</span></div>`}).join('');
+  const vw=$('rl').clientWidth,off=WIN*126+59-vw/2+(Math.random()-.5)*70,state={done:false};
+  $('o1').classList.add('dis');$('o5').classList.add('dis');
+  const sk=$('sk');if(PH[win.i].r<4){sk.style.display='block';sk.classList.remove('dis')}
+  strip.style.transition='none';strip.style.transform='translateX(0)';void strip.offsetWidth;
+  strip.style.transition='transform 5.8s cubic-bezier(.1,.55,.1,1)';strip.style.transform=`translateX(${-off}px)`;
+  tickLoop(strip,vw,state);
+  let tmo=0;
+  const fin=()=>{if(state.done)return;state.done=true;clearTimeout(tmo);skipFn=null;strip.style.transition='none';strip.style.transform=`translateX(${-off}px)`;sk.style.display='none';busy=false;$('o1').classList.remove('dis');$('o5').classList.remove('dis');renderHead();reveal(it,true)};
+  skipFn=fin;tmo=setTimeout(fin,6000);
+}
+function open5(){
+  const c=caseById(caseId);if(busy)return;
+  if(S.coins<c.cost*5){sfx.err();hap('error');toast('Не хватает монет');return}
+  S.coins-=c.cost*5;const its=[];
+  for(let k=0;k<5;k++){const it=addItem(luckRoll(c));its.push(it);S.stats.open++;qAdd('open');addXp(10+8*PH[it.i].r)}
+  save();renderHead();
+  const best=Math.max(...its.map(x=>PH[x.i].r)),total=its.reduce((a,x)=>a+itemVal(x),0);
+  sfx.rev(best);hap(best>=3?'success':'l');if(best>=3)confetti(60,RC[best]);
+  openModal(`<h2 style="text-align:center">Результат ×5</h2><div class="grid" style="margin-bottom:12px">${its.map(x=>icard(x,{attr:''})).join('')}</div><div class="val" style="text-align:center;font-size:20px;font-weight:900;color:var(--gold);margin-bottom:12px">Всего: ${money(total)}</div><div class="row"><button class="btn g" data-act="sellmany" data-us="${its.filter(x=>x.u>0).map(x=>x.u).join(',')}">Продать всё</button><button class="btn" data-act="close">Оставить</button></div>`);
+  renderAll();
+}
+function reveal(it,fresh){
+  const r=PH[it.i].r;sfx.rev(r);hap(r>=3?'success':'l');if(r>=3||it.s)confetti(r>=5?120:70,RC[r]);
+  if(it.auto){itemModal(Object.assign({},it,{u:-1}),'info');return}
+  itemModal(it,fresh?'fresh':'view');delete it.nw;
+}
+
+/* ---------- коллекция ---------- */
+function renderCol(){
+  let h=`<div class="row" style="margin-bottom:12px"><button class="btn ${colTab==='mine'?'':'g'}" data-tab="mine">Мои телефоны (${S.items.length})</button><button class="btn ${colTab==='cat'?'':'g'}" data-tab="cat">Каталог ${Object.keys(S.seen).length}/${PH.length}</button></div>`;
+  if(colTab==='mine'){
+    const brands=[...new Set(PH.map(p=>p.b))].sort();
+    h+=`<div class="chips"><button class="fc ${fR<0?'on':''}" data-fr="-1">Все</button>${RN.map((n,i)=>`<button class="fc ${fR===i?'on':''}" data-fr="${i}" style="${fR===i?'':'color:'+RC[i]}">${n}</button>`).join('')}</div>`;
+    h+=`<div class="row" style="margin-bottom:10px"><select id="fb"><option value="all">Все бренды</option>${brands.map(b=>`<option ${fB===b?'selected':''}>${b}</option>`).join('')}</select><select id="fs"><option value="v" ${fS==='v'?'selected':''}>Сначала дорогие</option><option value="r" ${fS==='r'?'selected':''}>По редкости</option><option value="n" ${fS==='n'?'selected':''}>Сначала новые</option></select></div>`;
+    h+=`<div class="row" style="margin-bottom:12px"><button class="btn g" data-act="selldup" style="font-size:13px;padding:11px">Продать дубли</button><button class="btn g" data-act="selllow" style="font-size:13px;padding:11px">Продать обычные</button></div>`;
+    let list=S.items.filter(x=>(fR<0||PH[x.i].r===fR)&&(fB==='all'||PH[x.i].b===fB));
+    list.sort(fS==='v'?(a,b)=>itemVal(b)-itemVal(a):fS==='r'?(a,b)=>PH[b.i].r-PH[a.i].r||itemVal(b)-itemVal(a):(a,b)=>b.u-a.u);
+    if(!list.length)h+=`<div class="panel sub" style="text-align:center">Здесь пока пусто. Открой кейс на вкладке «Кейсы»!</div>`;
+    else{h+=`<div class="grid">${list.slice(0,colPage*60).map(x=>icard(x)).join('')}</div>`;if(list.length>colPage*60)h+=`<button class="btn g w" style="margin-top:12px" data-act="more">Показать ещё (${list.length-colPage*60})</button>`}
+  }else{
+    const brands={};PH.forEach(p=>(brands[p.b]=brands[p.b]||[]).push(p));
+    Object.keys(brands).sort((a,b)=>brands[b].length-brands[a].length||a.localeCompare(b)).forEach(b=>{
+      const a=brands[b],got=a.filter(p=>S.seen[p.i]).length,done=got===a.length,rew=Math.round(a.reduce((s,p)=>s+p.v,0)*.15);
+      h+=`<div style="display:flex;align-items:center;gap:10px;margin:14px 2px 8px"><b style="font-size:16px">${b}</b><span style="color:var(--mu);font-size:13px">${got}/${a.length}</span><span style="flex:1"></span>${done?(S.br[b]?'<span style="color:var(--ok);font-size:12px;font-weight:800">✔ награда получена</span>':`<button class="btn gold" style="padding:7px 12px;font-size:12px" data-act="brand" data-b="${b}">Забрать ${fmt(rew)} ${CU}</button>`):`<span style="color:var(--mu);font-size:11.5px">награда: ${fmt(rew)} ${CU}</span>`}</div><div class="grid">${a.sort((x,y)=>x.r-y.r||x.v-y.v).map(p=>pcard(p,{lock:!S.seen[p.i],attr:`data-cat="${p.i}"`})).join('')}</div>`;
+    });
+  }
+  $('s-col').innerHTML=h;
+}
+
+/* ---------- батл ---------- */
+const stOf=p=>{const u=Math.min(p.usd,1800);return{perf:Math.min(100,8+(p.y-2000)*1.6+p.ram*2.2+u/90),cam:p.mp?Math.min(100,12+p.mp*.32+u/110):6,bat:Math.min(100,p.mah/60),disp:Math.min(100,20+p['in']*5.5+u/100)}};
+const ST_N={perf:'⚙️ Мощность',cam:'📷 Камера',bat:'🔋 Батарея',disp:'🖥 Экран'};
+function energy(){const now=Date.now();if(S.en>=5){S.enAt=now;return}while(S.en<5&&now-S.enAt>=180000){S.en++;S.enAt+=180000}if(S.en>=5)S.enAt=now}
+function bestItem(){return S.items.slice().sort((a,b)=>itemVal(b)-itemVal(a))[0]}
+function fighter(){let f=S.fi&&byU(S.fi);if(!f){f=bestItem();S.fi=f?f.u:0}return f}
+let bres=null;
+function renderBat(){
+  energy();const f=fighter();
+  let h=`<h2>Батл</h2><div class="sub">Сразись с телефоном соперника: сравниваются мощность, камера, батарея и экран. За победу — монеты и трофеи. Бой стоит 1 ⚡, энергия восстанавливается медленно, а награда небольшая.</div>`;
+  h+=`<div class="panel row" style="text-align:center"><div><div class="sub" style="margin:0">Трофеи</div><b style="font-size:20px">🏆 ${S.tr}</b></div><div><div class="sub" style="margin:0">Энергия</div><b style="font-size:20px">⚡ ${S.en}/5</b><div class="sub" style="margin:2px 0 0" data-tm="en">${S.en<5?'+1 через '+tm(180000-(Date.now()-S.enAt)):'полная'}</div></div><div><div class="sub" style="margin:0">Победы</div><b style="font-size:20px">${S.stats.win}/${S.stats.bat}</b></div></div>`;
+  if(!f){h+=`<div class="panel sub" style="text-align:center">У тебя нет телефонов. Открой кейс, чтобы выйти на бой!</div>`;$('s-bat').innerHTML=h;return}
+  const fp=PH[f.i];
+  if(bres){
+    const o=bres.opp,so=bres.so,sm=bres.sm;
+    h+=`<div class="vs">${pcard(fp,{val:itemVal(f)})}<div class="x">VS</div>${pcard(o)}</div>`;
+    ['perf','cam','bat','disp'].forEach((k,i)=>{const a=sm[k],b=so[k],w=a>b;h+=`<div class="st"><div class="b l ${w?'win':''}"><i style="width:${a}%"></i></div><div>${ST_N[k]}<br><b style="color:#fff">${Math.round(a)} : ${Math.round(b)}</b></div><div class="b r ${!w?'win':''}"><i style="width:${b}%"></i></div></div>`});
+    h+=`<div class="panel" style="text-align:center;margin-top:12px"><div style="font-size:22px;font-weight:900;color:${bres.win?'var(--ok)':'var(--bad)'}">${bres.win?'Победа! 🎉':'Поражение'}</div><div class="sub" style="margin:6px 0 0">Раунды ${bres.score[0]}:${bres.score[1]} · ${bres.win?`+${money(bres.coins)} · +${bres.tr} 🏆`:`−${bres.tr} 🏆`}</div></div>`;
+  }else{
+    h+=`<div class="panel"><div class="sub" style="margin:0 0 8px">Твой боец</div><div style="max-width:170px;margin:0 auto">${pcard(fp,{val:itemVal(f),cond:CONDS[f.c][0]})}</div></div>`;
+  }
+  h+=`<div class="row"><button class="btn g" data-act="pickf">Сменить бойца</button><button class="btn ${S.en>0?'red':'dis'}" data-act="fight">${bres?'Ещё бой':'В бой!'} · 1 ⚡</button></div>`;
+  $('s-bat').innerHTML=h;
+}
+function fight(){
+  energy();const f=fighter();if(!f||S.en<1||busy){if(S.en<1)toast('Нет энергии — подожди немного');return}
+  const fp=PH[f.i];busy=true;S.en--;if(S.en===4)S.enAt=Date.now();S.stats.bat++;qAdd('bat');
+  const pool=PH.filter(p=>Math.abs(p.r-fp.r)<=1&&p!==fp),opp=pick(pool.length?pool:PH);
+  const a=stOf(fp),b=stOf(opp),sm={},so={};let sc=[0,0],ta=0,tb=0;
+  ['perf','cam','bat','disp'].forEach(k=>{sm[k]=Math.min(100,a[k]*(.85+Math.random()*.3));so[k]=Math.min(100,b[k]*(.85+Math.random()*.3));ta+=sm[k];tb+=so[k];sm[k]>so[k]?sc[0]++:sc[1]++});
+  const win=sc[0]>sc[1]||(sc[0]===sc[1]&&ta>=tb);
+  const coins=win?Math.min(4000,Math.round(opp.v*.02+80)):0,tr=win?12+(opp.r>=fp.r?4:0):Math.min(S.tr,8);
+  bres=null;renderBat();sfx.click();
+  // анимация по раундам
+  let h=`<div class="vs">${pcard(fp,{val:itemVal(f)})}<div class="x">VS</div>${pcard(opp)}</div><div id="rounds"></div>`;
+  $('s-bat').innerHTML=`<h2>Батл</h2>`+h;
+  const keys=['perf','cam','bat','disp'];let k=0;
+  const step=()=>{
+    if(k>=4){
+      if(win){S.coins+=coins;S.tr+=tr;S.stats.win++;qAdd('win')}else S.tr-=tr;
+      addXp(win?15:5);save();busy=false;bres={opp,sm,so,win,score:sc,coins,tr};renderHead();sfx.rev(win?3:0);hap(win?'success':'error');if(win)confetti(60,'#3ddc84');renderBat();return;
+    }
+    const key=keys[k],w=sm[key]>so[key];
+    $('rounds').insertAdjacentHTML('beforeend',`<div class="st"><div class="b l ${w?'win':''}"><i style="width:${sm[key]}%"></i></div><div>${ST_N[key]}<br><b style="color:#fff">${Math.round(sm[key])} : ${Math.round(so[key])}</b></div><div class="b r ${!w?'win':''}"><i style="width:${so[key]}%"></i></div></div>`);
+    sfx.tick();k++;setTimeout(step,850);
+  };
+  setTimeout(step,500);
+}
+
+/* ---------- контракт ---------- */
+const CON_P=[.85,.65,.5,.35,.2,.06];
+function renderCon(){
+  const items=cSel.map(byU).filter(Boolean);cSel=items.map(x=>x.u);
+  const r=items.length?PH[items[0].i].r:-1;
+  let h=`<h2>Контракт</h2><div class="sub">Отдай 5 телефонов одной редкости и получи 1 телефон редкостью выше. Шансы низкие и падают с редкостью — при неудаче выпадет телефон той же редкости, а отданные пропадают.</div><div class="slots">`;
+  for(let k=0;k<5;k++)h+=`<div class="slot" data-act="pickc">${items[k]?psvg(PH[items[k].i]):'+'}</div>`;
+  h+=`</div>`;
+  if(r>=0&&r<6){const v=items.reduce((a,x)=>a+itemVal(x),0);h+=`<div class="panel" style="text-align:center"><div class="sub" style="margin:0">Редкость <b style="color:${RC[r]}">${RN[r]}</b> → <b style="color:${RC[r+1]}">${RN[r+1]}</b></div><div style="font-size:22px;font-weight:900;margin:6px 0">Шанс ${Math.round(CON_P[r]*100)}%</div><div class="sub" style="margin:0">Стоимость отдаваемых: ${money(v)}</div></div>`}
+  else if(r===6)h+=`<div class="panel sub" style="text-align:center">Божественные телефоны нельзя обменять.</div>`;
+  h+=`<div class="row"><button class="btn g" data-act="pickc">Выбрать (${items.length}/5)</button><button class="btn ${items.length===5&&r<6?'':'dis'}" data-act="contract">Заключить</button></div>`;
+  $('s-con').innerHTML=h;
+}
+function pickerHTML(){
+  const items=cSel.map(byU).filter(Boolean),r=items.length?PH[items[0].i].r:-1;
+  const list=S.items.filter(x=>PH[x.i].r<6&&(r<0||PH[x.i].r===r)).sort((a,b)=>PH[b.i].r-PH[a.i].r||itemVal(b)-itemVal(a)).slice(0,200);
+  return `<h2 style="text-align:center">Выбери 5 телефонов${r>=0?' · '+RN[r]:''}</h2>${list.length?`<div class="grid" style="margin-bottom:12px">${list.map(x=>icard(x,{sel:cSel.includes(x.u),attr:`data-cu="${x.u}"`})).join('')}</div>`:'<div class="sub" style="text-align:center">Подходящих телефонов нет.</div>'}<button class="btn w" data-act="close">Готово (${cSel.length}/5)</button>`;
+}
+function doContract(){
+  const items=cSel.map(byU).filter(Boolean);if(items.length!==5)return;
+  const r=PH[items[0].i].r;if(r>=6)return;
+  const ok=Math.random()<CON_P[r],nr=ok?r+1:r;
+  sellItemsNoCoins(items);
+  const ph=pick(PH.filter(p=>p.r===nr)),it=addItem({i:ph.i,c:wpick(CONDS.map((x,i)=>i),i=>CONDS[i][2]),s:Math.random()<SHINY?1:0});
+  S.stats.con++;qAdd('con');addXp(20);cSel=[];save();renderAll();
+  toast(ok?'Контракт успешен! Редкость повышена':'Не повезло: редкость та же');
+  reveal(it,false);
+}
+function sellItemsNoCoins(list){const set=new Set(list.map(x=>x.u));S.items=S.items.filter(x=>!set.has(x.u));if(S.fi&&!byU(S.fi))S.fi=0}
+
+/* ---------- бонусы ---------- */
+const DAILY=[500,700,1000,1400,1900,2600,4000];
+const ACH=[
+ ['o1','📦','Первый кейс','Открой 1 кейс',()=>S.stats.open,1,500],
+ ['o10','📦','Любитель кейсов','Открой 10 кейсов',()=>S.stats.open,10,1500],
+ ['o50','📦','Кейсовый маньяк','Открой 50 кейсов',()=>S.stats.open,50,6000],
+ ['o250','📦','Легенда кейсов','Открой 250 кейсов',()=>S.stats.open,250,30000],
+ ['u10','📱','Коллекционер','Собери 10 разных моделей',()=>Object.keys(S.seen).length,10,2000],
+ ['u30','📱','Эксперт','Собери 30 разных моделей',()=>Object.keys(S.seen).length,30,10000],
+ ['u60','📱','Хранитель каталога','Собери 60 разных моделей',()=>Object.keys(S.seen).length,60,60000],
+ ['leg','⭐','Золотой улов','Получи легендарный телефон',()=>Math.max(-1,...Object.keys(S.seen).map(i=>PH[i].r))>=4?1:0,1,5000],
+ ['w5','⚔️','Боец','Выиграй 5 батлов',()=>S.stats.win,5,2000],
+ ['w25','⚔️','Чемпион','Выиграй 25 батлов',()=>S.stats.win,25,12000],
+ ['c3','🔁','Контрактник','Заключи 3 контракта',()=>S.stats.con,3,3000],
+ ['l5','🎖','Опытный','Достигни 5 уровня',()=>lvInfo().L,5,3000],
+ ['l15','🎖','Мастер','Достигни 15 уровня',()=>lvInfo().L,15,25000]
+];
+function renderBon(){
+  const today=dayNum(),got=S.dl.day===today;
+  const pos=got?((S.dl.streak-1)%7+1):((S.dl.day===today-1?S.dl.streak:0)%7);
+  let h=questHTML()+`<h2>Ежедневная награда</h2><div class="panel"><div style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:12px">${DAILY.map((v,k)=>`<div style="text-align:center;padding:8px 2px;border-radius:12px;background:${k<pos?'#3ddc8430':'#ffffff0c'};border:1px solid ${k===pos&&!got?'var(--gold)':'#ffffff10'}"><div style="font-size:10px;color:var(--mu)">День ${k+1}</div><div style="font-size:16px">${k<pos?'✅':k===6?'🎁':'🪙'}</div><div style="font-size:10px;font-weight:800;color:var(--gold)">${fmt(v)}</div></div>`).join('')}</div><button class="btn w ${got?'dis':'gold'}" data-act="daily">${got?'Получено — приходи завтра':'Забрать '+fmt(DAILY[pos])+' '+CU}</button></div>`;
+  const fr=freeLeft();
+  h+=`<h2>Бесплатный кейс</h2><div class="panel row" style="align-items:center"><div class="sub" style="margin:0;flex:2">Каждые 8 часов — один бюджетный кейс бесплатно.</div><button class="btn ${fr?'dis':'gold'}" data-act="free" data-tm="freeb">${fr?tm(fr):'Открыть'}</button></div><h2>Достижения</h2><div class="panel">`;
+  h+=ACH.map(a=>{const cur=Math.min(a[4](),a[5]),d=!!S.ach[a[0]],can=!d&&cur>=a[5];return `<div class="li"><div class="ic">${a[1]}</div><div class="tx">${a[2]}<small>${a[3]} · ${fmt(cur)}/${fmt(a[5])}</small></div>${d?'<span style="color:var(--ok);font-weight:800">✔</span>':can?`<button class="btn gold" style="padding:8px 12px;font-size:12px" data-act="ach" data-a="${a[0]}">+${fmt(a[6])}</button>`:`<span style="color:var(--mu);font-size:12px">${fmt(a[6])} ${CU}</span>`}</div>`}).join('')+'</div>';
+  h+=`<div class="sub" style="text-align:center;font-size:11px">${WST} · <u data-act="rewiki">обновить</u></div>`;
+  $('s-bon').innerHTML=h;
+}
+
+/* ---------- события ---------- */
+document.addEventListener('click',e=>{
+  const t=e.target.closest('[data-go],[data-case],[data-tab],[data-fr],[data-act],[data-u],[data-cat],[data-cu]');if(!t)return;
+  const d=t.dataset;
+  if(d.cu){const u=+d.cu,i=cSel.indexOf(u);if(i>=0)cSel.splice(i,1);else{const f=cSel.length&&byU(cSel[0]);if(cSel.length>=5)return toast('Уже выбрано 5');if(f&&PH[f.i].r!==PH[byU(u).i].r)return toast('Нужна одна редкость');cSel.push(u)}sfx.click();openModal(pickerHTML());return}
+  if(d.act){
+    sfx.click();
+    switch(d.act){
+      case 'close':closeModal();renderAll();break;
+      case 'open1':open1();break;
+      case 'open5':open5();break;
+      case 'skip':skipFn&&skipFn();break;
+      case 'sell1':{const it=byU(+d.u);if(it){const v=sellItems([it]);save();sfx.coin();hap('success');closeModal();toast('+'+money(v));renderAll()}break}
+      case 'sellmany':{const l=(d.us||'').split(',').filter(Boolean).map(u=>byU(+u)).filter(Boolean);if(l.length){const v=sellItems(l);save();sfx.coin();hap('success');closeModal();toast('+'+money(v))}renderAll();break}
+      case 'fighter':S.fi=+d.u;bres=null;save();closeModal();go('bat');break;
+      case 'pickf':{const l=S.items.slice().sort((a,b)=>itemVal(b)-itemVal(a)).slice(0,60);openModal(`<h2 style="text-align:center">Выбери бойца</h2><div class="grid">${l.map(x=>icard(x,{attr:`data-u="${x.u}" data-act="fighter"`})).join('')}</div>`);break}
+      case 'fight':fight();break;
+      case 'pickc':openModal(pickerHTML());break;
+      case 'contract':doContract();break;
+      case 'more':colPage++;renderCol();break;
+      case 'selldup':{
+        const m={};S.items.forEach(x=>{(m[x.i]=m[x.i]||[]).push(x)});
+        const sell=[];Object.values(m).forEach(a=>{if(a.length>1){a.sort((p,q)=>itemVal(q)-itemVal(p));sell.push(...a.slice(1).filter(x=>!x.s))}});
+        if(!sell.length){toast('Дублей нет');break}
+        openModal(`<h2 style="text-align:center">Продать дубли?</h2><div class="sub" style="text-align:center">Останется по одному лучшему телефону каждой модели.<br>Будет продано: <b>${sell.length}</b> шт. за <b style="color:var(--gold)">${money(sell.reduce((a,x)=>a+sellPrice(x),0))}</b></div><div class="row"><button class="btn g" data-act="close">Отмена</button><button class="btn" data-act="sellmany" data-us="${sell.map(x=>x.u).join(',')}">Продать</button></div>`);break}
+      case 'selllow':{
+        const sell=S.items.filter(x=>PH[x.i].r<=0&&!x.s);
+        if(!sell.length){toast('Обычных телефонов нет');break}
+        openModal(`<h2 style="text-align:center">Продать обычные?</h2><div class="sub" style="text-align:center">Будет продано: <b>${sell.length}</b> шт. за <b style="color:var(--gold)">${money(sell.reduce((a,x)=>a+sellPrice(x),0))}</b><br>★ лимитки не продаются автоматически.</div><div class="row"><button class="btn g" data-act="close">Отмена</button><button class="btn" data-act="sellmany" data-us="${sell.map(x=>x.u).join(',')}">Продать</button></div>`);break}
+      case 'brand':{const a=PH.filter(p=>p.b===d.b);if(a.every(p=>S.seen[p.i])&&!S.br[d.b]){const r=Math.round(a.reduce((s,p)=>s+p.v,0)*.15);S.br[d.b]=1;S.coins+=r;save();sfx.coin();hap('success');toast(`Коллекция ${d.b} собрана! +${fmt(r)} ${CU}`);renderAll()}break}
+      case 'daily':{const today=dayNum();if(S.dl.day===today)break;const streak=S.dl.day===today-1?S.dl.streak+1:1,r=DAILY[(streak-1)%7];S.dl={day:today,streak};S.coins+=r;save();sfx.coin();hap('success');toast('+'+money(r));renderAll();break}
+      case 'free':openFree();break;
+      case 'rewiki':WIMG={};try{localStorage.removeItem('pb_wimg')}catch(e){}WST='фото: запрос…';loadWiki().then(renderAll);renderAll();break;
+      case 'quest':{const qs=quests(),q=qs[+d.q];if(q&&!S.q.d[q.id]&&(S.q.p[q.k]||0)>=q.n){S.q.d[q.id]=1;let r=q.rw;if(qDone()===3){r*=2;toast('🎉 Все задания! Бонус ×2');}S.coins+=r;addXp(40);save();sfx.coin();hap('success');if(qDone()<3)toast('+'+money(r));renderAll()}break}
+      case 'ach':{const a=ACH.find(x=>x[0]===d.a);if(a&&!S.ach[a[0]]&&a[4]()>=a[5]){S.ach[a[0]]=1;S.coins+=a[6];save();sfx.coin();hap('success');toast('+'+money(a[6]));renderAll()}break}
+    }
+    return;
+  }
+  if(d.go){go(d.go);return}
+  if(d.case){sfx.click();if(d.case==='free')openFree();else{caseId=d.case;go('case')}return}
+  if(d.tab){colTab=d.tab;colPage=1;renderCol();return}
+  if(d.fr!==undefined){fR=+d.fr;colPage=1;renderCol();return}
+  if(d.cat!==undefined){const p=PH[+d.cat];if(!S.seen[p.i]&&cur==='col'){toast(`Ещё не получен · ${RN[p.r]} · ${fmt(p.v)} ${CU}`);return}itemModal({i:p.i,c:2,s:0,u:-1},'info');return}
+  if(d.u!==undefined){const it=byU(+d.u);if(it){sfx.click();itemModal(it,'view')}return}
+});
+document.addEventListener('change',e=>{if(e.target.id==='fb'){fB=e.target.value;colPage=1;renderCol()}if(e.target.id==='fs'){fS=e.target.value;colPage=1;renderCol()}});
+$('snd').addEventListener('click',()=>{S.snd=S.snd?0:1;save();renderHead();if(S.snd)sfx.click()});
+document.addEventListener('contextmenu',e=>e.preventDefault());
+
+/* ---------- таймеры ---------- */
+setInterval(()=>{
+  const fr=freeLeft();
+  document.querySelectorAll('[data-tm="free"]').forEach(e=>e.textContent=fr>0?'Через '+tm(fr):'Готов к открытию!');
+  document.querySelectorAll('[data-tm="freeb"]').forEach(e=>{if(fr>0)e.textContent=tm(fr);else if(e.classList.contains('dis'))renderBon()});
+  const f=$('frb');if(f)f.textContent=fr>0?'⏳ Ждём':'Открыть';
+  if(cur==='bat'&&!busy){const en=S.en;energy();if(S.en!==en)renderBat();else document.querySelectorAll('[data-tm="en"]').forEach(e=>e.textContent=S.en<5?'+1 через '+tm(180000-(Date.now()-S.enAt)):'полная')}
+  $('bdot').classList.toggle('on',bonusDot());
+},1000);
+renderAll();cloudLoad();
+setTimeout(loadWiki,1200);
+</script>
+</body></html>
